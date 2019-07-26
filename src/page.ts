@@ -1,17 +1,11 @@
-import puppeteer, {EmulateOptions, Request} from "puppeteer";
+import puppeteer, {EmulateOptions, LoadEvent, Request} from "puppeteer";
 import {Hook} from "./hook";
 import express from "express";
 import {Interceptor} from "./interceptor";
 import {ApplicationRequest} from "./application";
 import {Renderer} from "./renderer";
+import {Omit} from "yargs";
 
-
-interface PageConfiguration {
-  hooks: Hook[];
-  interceptors: Interceptor[];
-  matcher: string | RegExp | string[] | RegExp[];
-  emulateOptions?: EmulateOptions;
-}
 
 interface PageSettings {
   name: string;
@@ -19,9 +13,10 @@ interface PageSettings {
   interceptors?: Interceptor[];
   matcher: string | RegExp | string[] | RegExp[];
   emulateOptions?: EmulateOptions;
+  waitMethod?: LoadEvent
 }
 
-const defaultPageSettings = {
+const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
   hooks: [],
   interceptors: [],
   emulateOptions: {
@@ -34,12 +29,13 @@ const defaultPageSettings = {
       hasTouch: true,
       isLandscape: false
     }
-  }
+  },
+  waitMethod: "load"
 };
 
 
 class Page {
-  readonly configuration: PageConfiguration;
+  readonly configuration: Required<PageSettings>;
   private renderer: Renderer;
 
   constructor(

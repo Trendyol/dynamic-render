@@ -1,11 +1,11 @@
 {
-  "name": "prender",
+  "name": "dynamic-render",
   "version": "1.0.0",
-  "description": "",
+  "description": "Dynamic Render is a headless Chrome rendering solution designed to render & serialise web pages on the fly.",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/jest",
-    "start:dev": "node -r ts-node/register src/index.ts"
+    "test": "./node_modules/.bin/jest --coverage",
+    "test:watch": "./node_modules/.bin/jest --watch --coverage"
   },
   "repository": {
     "type": "git",

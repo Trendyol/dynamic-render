@@ -41,6 +41,19 @@ class Application {
       this.router.get(page.configuration.matcher, page.handle);
     });
   }
+
+  toJSON() {
+    return {
+      pages: this.configuration.pages.map(page => ({
+        matcher: page.configuration.matcher,
+        interceptors: page.configuration.interceptors.map(i => i.name),
+        hooks: page.configuration.hooks.map(i => i.name),
+        waitMethod: page.configuration.waitMethod,
+        emulateOptions: page.configuration.emulateOptions
+      })),
+      emulateOptions: this.configuration.emulateOptions
+    }
+  }
 }
 
 export {

@@ -2,7 +2,7 @@ import {Page} from "puppeteer";
 
 type HookHandler = (page: Page) => Promise<void>;
 
-interface HookConfigration {
+interface HookConfiguration {
   name: string;
   handler: HookHandler
 }
@@ -11,7 +11,7 @@ class Hook {
   name: string;
   private readonly handler: HookHandler;
 
-  constructor(configuration: HookConfigration){
+  constructor(configuration: HookConfiguration){
     this.handler = configuration.handler;
     this.name = configuration.name;
 
@@ -25,6 +25,6 @@ class Hook {
 
 export {
   HookHandler,
-  HookConfigration,
+  HookConfiguration,
   Hook
 }

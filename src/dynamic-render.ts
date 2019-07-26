@@ -2,7 +2,7 @@ import {Server, ServerConfiguration} from "./server";
 import {Renderer} from "./renderer";
 import {Page, PageSettings} from "./page";
 import {Application, ApplicationConfig} from "./application";
-import {Hook, HookConfigration} from "./hook";
+import {Hook, HookConfiguration} from "./hook";
 import {Interceptor, InterceptorConfiguration} from "./interceptor";
 import express from "express";
 
@@ -16,8 +16,8 @@ const defaultConfiguration = {
 };
 
 class DynamicRender {
-  private applications: Map<string, Application> = new Map();
-  private configuration: PrerenderDefaultConfiguration;
+  applications: Map<string, Application> = new Map();
+  configuration: PrerenderDefaultConfiguration;
   private server: Server;
 
   private readonly renderer: Renderer;
@@ -25,22 +25,22 @@ class DynamicRender {
   constructor(
     server: Server,
     renderer: Renderer,
-    configuration?: PrerenderDefaultConfiguration
   ) {
-    this.configuration = Object.assign(defaultConfiguration, configuration);
+    this.configuration = defaultConfiguration;
     this.server = server;
     this.renderer = renderer;
 
     this.server.register('/', 'get', this.status.bind(this));
   }
 
-  async start() {
+  async start(configuration?: PrerenderDefaultConfiguration) {
+    this.configuration = Object.assign(this.configuration, configuration);
     await this.renderer.init();
     await this.registerApplications();
     return this.server.listen(this.configuration.port);
   }
 
-  hook(configuration: HookConfigration): Hook {
+  hook(configuration: HookConfiguration): Hook {
     return new Hook(configuration);
   }
 
@@ -56,8 +56,14 @@ class DynamicRender {
     this.applications.set(name, new Application(configuration));
   }
 
-  private status(_: express.Request, res: express.Response) {
-    res.json([...this.applications])
+  status(_: express.Request, res: express.Response) {
+    const applications: { [key: string]: any } = {};
+
+    this.applications.forEach((val, key) => {
+      applications[key] = val.toJSON()
+    });
+
+    res.json(applications);
   }
 
   private async registerApplications() {
