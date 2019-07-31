@@ -16,6 +16,7 @@ class Server {
 
   listen(port: number) {
     return new Promise(resolve => {
+      console.log('Server call');
       this.app.listen(port, () => {
         resolve(port);
       });

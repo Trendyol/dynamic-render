@@ -21,22 +21,15 @@ class Application {
 
   constructor(configuration: ApplicationConfig) {
     this.configuration = configuration;
-
     this.router = express.Router();
 
+    this.applicationInfoMiddleware = this.applicationInfoMiddleware.bind(this);
+    this.handleStatus = this.handleStatus.bind(this);
   }
 
   init() {
-    this.router.use((req: ApplicationRequest, res, next) => {
-      req.application = {
-        origin: this.configuration.origin,
-        emulateOptions: this.configuration.emulateOptions
-      };
-      next();
-    });
-    this.router.get('/', (req, res) => {
-      res.json(this.configuration);
-    });
+    this.router.use(this.applicationInfoMiddleware);
+    this.router.get('/', this.handleStatus);
     this.configuration.pages.forEach(page => {
       this.router.get(page.configuration.matcher, page.handle);
     });
@@ -44,15 +37,21 @@ class Application {
 
   toJSON() {
     return {
-      pages: this.configuration.pages.map(page => ({
-        matcher: page.configuration.matcher,
-        interceptors: page.configuration.interceptors.map(i => i.name),
-        hooks: page.configuration.hooks.map(i => i.name),
-        waitMethod: page.configuration.waitMethod,
-        emulateOptions: page.configuration.emulateOptions
-      })),
+      pages: this.configuration.pages,
       emulateOptions: this.configuration.emulateOptions
     }
+  }
+
+  applicationInfoMiddleware(req: ApplicationRequest, res: express.Response, next: express.NextFunction) {
+    req.application = {
+      origin: this.configuration.origin,
+      emulateOptions: this.configuration.emulateOptions
+    };
+    next();
+  }
+
+  handleStatus(req: express.Request, res: express.Response) {
+    res.json(this.configuration);
   }
 }
 

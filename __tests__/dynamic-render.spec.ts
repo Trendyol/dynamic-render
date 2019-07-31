@@ -3,28 +3,30 @@ import {SinonMock} from "sinon";
 import {expect} from "chai";
 import {DynamicRender} from "../src/dynamic-render";
 import {Server} from "../src/server";
-import {Renderer} from "../src/renderer";
+import {Engine} from "../src/engine";
 import {Hook, HookConfiguration} from "../src/hook";
 import * as faker from "faker";
 import {Interceptor, InterceptorConfiguration} from "../src/interceptor";
 import {Page, PageSettings} from "../src/page";
 import {Application, ApplicationConfig} from "../src/application";
 import {createExpressRequestMock, createExpressResponseMock} from "./helpers";
+import {ResponseCache} from "../src/response-cache";
 
 const sandbox = sinon.createSandbox();
 
+const responseCache = new ResponseCache();
 const server = new Server();
-const renderer = new Renderer();
+const renderer = new Engine(responseCache);
 
 let dynamicRender: DynamicRender;
 
 let serverMock: SinonMock;
-let rendererMock: SinonMock;
+let engineMock: SinonMock;
 
 describe('[prerender.ts]', () => {
   beforeEach(() => {
     serverMock = sandbox.mock(server);
-    rendererMock = sandbox.mock(renderer);
+    engineMock = sandbox.mock(renderer);
     dynamicRender = new DynamicRender(server, renderer);
   });
 

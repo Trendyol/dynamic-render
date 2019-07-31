@@ -1,9 +1,11 @@
 import {Server} from "./server";
-import {Renderer} from "./renderer";
+import {Engine} from "./engine";
 import {DynamicRender} from "./dynamic-render";
+import {ResponseCache} from "./response-cache";
 
+const responseCache = new ResponseCache();
 const server = new Server();
-const renderer = new Renderer();
+const engine = new Engine(responseCache);
 
 
-export = new DynamicRender(server, renderer);
+export = new DynamicRender(server, engine);

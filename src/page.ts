@@ -3,7 +3,7 @@ import {Hook} from "./hook";
 import express from "express";
 import {Interceptor} from "./interceptor";
 import {ApplicationRequest} from "./application";
-import {Renderer} from "./renderer";
+import {Engine} from "./engine";
 import {Omit} from "yargs";
 
 
@@ -36,28 +36,40 @@ const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
 
 class Page {
   readonly configuration: Required<PageSettings>;
-  private renderer: Renderer;
+  private readonly engine: Engine;
 
   constructor(
     configuration: PageSettings,
-    renderer: Renderer
+    engine: Engine
   ) {
     this.configuration = Object.assign(defaultPageSettings, configuration);
 
-    this.hook = this.hook.bind(this);
     this.handle = this.handle.bind(this);
-    this.renderer = renderer;
-  }
-
-  async hook(page: puppeteer.Page) {
-    for (let i = 0, len = this.configuration.hooks.length; i < len; i++) {
-      await this.configuration.hooks[i].handle(page);
-    }
+    this.engine = engine;
   }
 
   async handle(req: ApplicationRequest, res: express.Response) {
-    const content = await this.renderer.render(this.configuration.emulateOptions!, `${req.application!.origin}${req.url}`, this.configuration.interceptors, this.configuration.hooks);
-    res.send(content);
+    const content = await this.engine.render({
+      emulateOptions: this.configuration.emulateOptions,
+      url: `${req.application!.origin}${req.url}`,
+      interceptors: this.configuration.interceptors,
+      hooks: this.configuration.hooks,
+      waitMethod: this.configuration.waitMethod
+    });
+
+    res
+      .status(content.status)
+      .send(content.html);
+  }
+
+  toJSON() {
+    return {
+      matcher: this.configuration.matcher,
+      interceptors: this.configuration.interceptors.map(i => i.name),
+      hooks: this.configuration.hooks.map(i => i.name),
+      waitMethod: this.configuration.waitMethod,
+      emulateOptions: this.configuration.emulateOptions
+    }
   }
 }
 

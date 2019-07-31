@@ -1,5 +1,5 @@
 import {Server, ServerConfiguration} from "./server";
-import {Renderer} from "./renderer";
+import {Engine} from "./engine";
 import {Page, PageSettings} from "./page";
 import {Application, ApplicationConfig} from "./application";
 import {Hook, HookConfiguration} from "./hook";
@@ -20,22 +20,22 @@ class DynamicRender {
   configuration: PrerenderDefaultConfiguration;
   private server: Server;
 
-  private readonly renderer: Renderer;
+  private readonly engine: Engine;
 
   constructor(
     server: Server,
-    renderer: Renderer,
+    renderer: Engine,
   ) {
     this.configuration = defaultConfiguration;
     this.server = server;
-    this.renderer = renderer;
+    this.engine = renderer;
 
     this.server.register('/', 'get', this.status.bind(this));
   }
 
   async start(configuration?: PrerenderDefaultConfiguration) {
     this.configuration = Object.assign(this.configuration, configuration);
-    await this.renderer.init();
+    await this.engine.init();
     await this.registerApplications();
     return this.server.listen(this.configuration.port);
   }
@@ -49,7 +49,7 @@ class DynamicRender {
   }
 
   page(pageSettings: PageSettings): Page {
-    return new Page(pageSettings, this.renderer);
+    return new Page(pageSettings, this.engine);
   }
 
   application(name: string, configuration: ApplicationConfig) {

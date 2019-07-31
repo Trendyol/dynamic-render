@@ -125,13 +125,6 @@ dynamicRender.application('mobile-web', {
 });
 
 
-dynamicRender.application('mobile-web', {
-  pages: [productDetailPage],
-  origin: 'https://m.trendyol.com'
-});
-
-
-
 dynamicRender
   .start()
   .then(port => {
