@@ -1,10 +1,10 @@
 import * as sinon from "sinon";
+import {SinonMock} from "sinon";
 import * as faker from "faker";
 import {expect} from "chai";
 import {Page, PageSettings} from "../src/page";
 import {Engine} from "../src/engine";
-import {SinonMock} from "sinon";
-import {createExpressRequestMock, createExpressResponseMock} from "./helpers";
+import {createExpressResponseMock} from "./helpers";
 import {ResponseCache} from "../src/response-cache";
 
 const sandbox = sinon.createSandbox();
@@ -42,40 +42,6 @@ describe('[page.ts]', () => {
     expect(page).to.be.instanceOf(Page);
   });
 
-  // it('should handle server requests', async () => {
-  //   // Arrange
-  //   const request = createExpressRequestMock(sandbox);
-  //   const response = createExpressResponseMock(sandbox);
-  //   const renderData = faker.random.word();
-  //
-  //   request.application = {
-  //     origin: faker.random.word()
-  //   };
-  //
-  //   const configuration: PageSettings = {
-  //     name: faker.random.word(),
-  //     matcher: faker.random.word(),
-  //     emulateOptions: {},
-  //     interceptors: [],
-  //     hooks: []
-  //   };
-  //
-  //   request.url = faker.random.word();
-  //
-  //   engineMock
-  //     .expects('render')
-  //     // .withExactArgs(configuration.emulateOptions, `${request.application.origin}${request.url}`, configuration.interceptors, configuration.hooks)
-  //     .resolves(renderData);
-  //
-  //   const page = new Page(configuration, engine);
-  //
-  //   // Acts
-  //   await page.handle(request, response);
-  //
-  //   // Assert
-  //   expect(response.send.calledWithExactly(renderData)).to.eq(true);
-  // });
-
   it('should convert page to json', () => {
     // Arrange
     const configuration = {
@@ -104,5 +70,97 @@ describe('[page.ts]', () => {
       waitMethod: configuration.waitMethod,
       emulateOptions: configuration.emulateOptions
     }))
+  });
+
+  it('should call engine for render with cache control', async () => {
+    // Arrange
+    const origin = faker.random.word();
+    const url = faker.random.word();
+    const renderResponse = {
+      status: 200,
+      html: faker.random.word()
+    };
+    const response = createExpressResponseMock(sandbox);
+    const request = {
+      url,
+      application: {
+        origin
+      },
+    };
+
+    const configuration = {
+      emulateOptions: faker.random.word(),
+      interceptors: [faker.random.word()],
+      hooks: [faker.random.word()],
+      waitMethod: faker.random.word(),
+      cacheDurationSeconds: faker.random.number()
+    };
+
+    const page = new Page(configuration as any, engine);
+
+    engineMock
+      .expects('render')
+      .withExactArgs({
+        emulateOptions: configuration.emulateOptions,
+        url: origin + url,
+        interceptors: configuration.interceptors,
+        hooks: configuration.hooks,
+        waitMethod: configuration.waitMethod,
+      })
+      .resolves(renderResponse);
+
+    // Act
+    await page.handle(request as any, response);
+
+    // Assert
+    expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
+    expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+    expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
+  });
+
+  it('should call engine for render without cache control', async () => {
+    // Arrange
+    const origin = faker.random.word();
+    const url = faker.random.word();
+    const renderResponse = {
+      status: 404,
+      html: faker.random.word()
+    };
+    const response = createExpressResponseMock(sandbox);
+    const request = {
+      url,
+      application: {
+        origin
+      },
+    };
+
+    const configuration = {
+      emulateOptions: faker.random.word(),
+      interceptors: [faker.random.word()],
+      hooks: [faker.random.word()],
+      waitMethod: faker.random.word(),
+      cacheDurationSeconds: faker.random.number()
+    };
+
+    const page = new Page(configuration as any, engine);
+
+    engineMock
+      .expects('render')
+      .withExactArgs({
+        emulateOptions: configuration.emulateOptions,
+        url: origin + url,
+        interceptors: configuration.interceptors,
+        hooks: configuration.hooks,
+        waitMethod: configuration.waitMethod,
+      })
+      .resolves(renderResponse);
+
+    // Act
+    await page.handle(request as any, response);
+
+    // Assert
+    expect(response.set.called).to.eq(false);
+    expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+    expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
   });
 });

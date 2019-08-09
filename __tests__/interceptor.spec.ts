@@ -2,6 +2,7 @@ import * as sinon from "sinon";
 import * as faker from "faker";
 import {expect} from "chai";
 import {Interceptor, InterceptorConfiguration} from "../src/interceptor";
+import {createPuppeteerRequest} from "./helpers";
 
 const sandbox = sinon.createSandbox();
 let interceptor: Interceptor;
@@ -37,7 +38,9 @@ describe('[interceptor.ts]', () => {
       handler:sandbox.stub()
     };
     const interceptor = new Interceptor(options);
-    const request = {} as any;
+    const request = createPuppeteerRequest(sandbox, {
+      url: sandbox.stub().returns(faker.random.word())
+    });
     const block = sandbox.stub();
     const respond = sandbox.stub();
 

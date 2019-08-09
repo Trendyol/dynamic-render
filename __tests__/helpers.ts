@@ -1,11 +1,13 @@
 import {SinonSandbox, SinonStub} from "sinon";
 
-export const createExpressResponseMock = (sandbox: SinonSandbox) => ({
+export const createExpressResponseMock = (sandbox: SinonSandbox, props?: Record<string, SinonStub>) => ({
   json: sandbox.stub().returnsThis(),
   send: sandbox.stub().returnsThis(),
   end: sandbox.stub(),
+  set: sandbox.stub().returnsThis(),
   write: sandbox.stub().returnsThis(),
-  status: sandbox.stub().returnsThis()
+  status: sandbox.stub().returnsThis(),
+  ...props
 }) as any;
 
 export const createExpressRequestMock = (sandbox: SinonSandbox) => ({
@@ -16,7 +18,10 @@ export const createExpressRequestMock = (sandbox: SinonSandbox) => ({
 export const createPuppeteerRequest = (sandbox: SinonSandbox, props?: Record<string, SinonStub>) => ({
   url: sandbox.stub(),
   respond: sandbox.stub(),
-  request: sandbox.stub()
+  continue: sandbox.stub(),
+  abort: sandbox.stub(),
+  request: sandbox.stub(),
+  ...props
 }) as any;
 
 export const createPuppeteerResponse = (sandbox: SinonSandbox, props?: Record<string, SinonStub>) => ({

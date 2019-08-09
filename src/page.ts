@@ -1,4 +1,4 @@
-import puppeteer, {EmulateOptions, LoadEvent, Request} from "puppeteer";
+import {EmulateOptions, LoadEvent} from "puppeteer";
 import {Hook} from "./hook";
 import express from "express";
 import {Interceptor} from "./interceptor";
@@ -13,12 +13,14 @@ interface PageSettings {
   interceptors?: Interceptor[];
   matcher: string | RegExp | string[] | RegExp[];
   emulateOptions?: EmulateOptions;
-  waitMethod?: LoadEvent
+  waitMethod?: LoadEvent;
+  cacheDurationSeconds?: number;
 }
 
 const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
   hooks: [],
   interceptors: [],
+  cacheDurationSeconds: 0,
   emulateOptions: {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1',
     viewport: {
@@ -56,6 +58,10 @@ class Page {
       hooks: this.configuration.hooks,
       waitMethod: this.configuration.waitMethod
     });
+
+    if (content.status === 200 && this.configuration.cacheDurationSeconds) {
+      res.set('cache-control', `max-age=${this.configuration.cacheDurationSeconds}, public`);
+    }
 
     res
       .status(content.status)

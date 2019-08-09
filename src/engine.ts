@@ -3,18 +3,6 @@ import {Interceptor} from "./interceptor";
 import {Hook} from "./hook";
 import {ResponseCache} from "./response-cache";
 
-const emulateOptions: EmulateOptions = {
-  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1',
-  viewport: {
-    width: 414,
-    height: 736,
-    deviceScaleFactor: 3,
-    isMobile: true,
-    hasTouch: true,
-    isLandscape: false
-  }
-};
-
 interface RenderOptions {
   emulateOptions: EmulateOptions,
   url: string,
@@ -30,9 +18,10 @@ class Engine {
   constructor(
     responseCache: ResponseCache
   ) {
+    this.responseCache = responseCache;
+
     this.handleInterceptors = this.handleInterceptors.bind(this);
     this.onResponse = this.onResponse.bind(this);
-    this.responseCache = responseCache;
   }
 
   async init() {
@@ -43,7 +32,7 @@ class Engine {
     });
   }
 
-  async createPage(): Promise<puppeteer.Page> {
+  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[]): Promise<puppeteer.Page> {
     const browserPage = await this.browser.newPage();
     await browserPage.emulate(emulateOptions);
     await (browserPage as any)._client.send('Network.setBypassServiceWorker', {bypass: true});
@@ -51,48 +40,53 @@ class Engine {
       cacheDisabled: false
     });
     await browserPage.setRequestInterception(true);
-    browserPage.on('request', this.onRequest);
+    browserPage.on('request', this.onRequest.bind(this, interceptors));
     browserPage.on('response', this.onResponse);
 
     return browserPage;
   }
 
   async render(options: RenderOptions) {
+    let browserPage;
+    const renderStatus = {
+      status: 404,
+      html: ''
+    };
+
     try {
-      const browserPage = await this.createPage();
+      browserPage = await this.createPage(options.emulateOptions, options.interceptors);
       const navigationResult = await browserPage.goto(options.url, {waitUntil: options.waitMethod});
 
-      if (!!options.hooks) {
-        for (const hook of options.hooks) await hook.handle(browserPage);
+      if (navigationResult) {
+        if (typeof options.hooks != "undefined" && options.hooks.length > 0) {
+          for (const hook of options.hooks) await hook.handle(browserPage);
+        }
+        const pageContent = await browserPage.content();
+        renderStatus.status = navigationResult.status();
+        renderStatus.html = pageContent;
       }
-      const pageContent = await browserPage.content();
-      await browserPage.close();
-
-      return {
-        status: navigationResult ? navigationResult.status() : 404,
-        html: pageContent
-      };
     } catch (e) {
-      return {
-        status: 404,
-        html: '',
-        duration: 0
-      }
+      console.error(e);
     }
+
+    if (browserPage) {
+      await browserPage.close();
+    }
+
+    return renderStatus;
   }
 
   async handleInterceptors(interceptors: Interceptor[], request: puppeteer.Request) {
     let handled = false;
+    let i = 0;
 
-    for (let i = 0, len = interceptors.length; i < len; i++) {
-      interceptors[i].handle(request, async (options) => {
-        await request.respond(options);
+    while (!handled && i < interceptors.length) {
+      interceptors[i++].handle(request, (options) => {
+        request.respond(options);
         handled = true;
-        return;
       }, () => {
         request.abort('blockedbyclient');
         handled = true;
-        return;
       });
     }
 
@@ -105,10 +99,10 @@ class Engine {
     await this.responseCache.setCache(response);
   }
 
-  async onRequest(request: puppeteer.Request, interceptors: Interceptor[]) {
+  async onRequest(interceptors: Interceptor[], request: puppeteer.Request) {
     if (await this.responseCache.request(request)) return;
 
-    if (!!interceptors) {
+    if (typeof interceptors !== "undefined" && interceptors.length > 0) {
       this.handleInterceptors(interceptors, request);
     } else {
       return request.continue();
