@@ -46,6 +46,7 @@ describe('[prerender.ts]', () => {
     // Arrange
     const port = 8080; //Default port
     serverMock.expects('listen').withExactArgs(port).resolves(port);
+    engineMock.expects('init');
 
     const dynamicRender = new DynamicRender(server, renderer);
 
@@ -149,6 +150,7 @@ describe('[prerender.ts]', () => {
     serverMock
       .expects('listen')
       .withExactArgs(8080);
+    engineMock.expects('init');
     const initStub = sandbox.stub(application!, 'init');
 
     // Act
