@@ -29,14 +29,9 @@ class Application {
 
   init() {
     this.router.use(this.applicationInfoMiddleware);
-    this.checkRootPathExists();
     this.configuration.pages.forEach(page => {
       this.router.get(page.configuration.matcher, page.handle);
     });
-  }
-
-  private checkRootPathExists() {
-    this.configuration.pages.some(page => page.configuration.matcher !== '/') && this.router.get('/', this.handleStatus)
   }
 
   toJSON() {
