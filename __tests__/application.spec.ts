@@ -90,7 +90,6 @@ describe('[application.ts]', () => {
 
     // Assert
     expect(routerMock.use.calledWithExactly(application.applicationInfoMiddleware)).to.eq(true);
-    expect(routerMock.get.calledWithExactly('/', application.handleStatus)).to.eq(true);
     expect(routerMock.get.calledWith(configuration.pages[0].configuration.matcher, configuration.pages[0].handle)).to.eq(true);
   });
 
