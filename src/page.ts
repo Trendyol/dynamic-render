@@ -44,7 +44,11 @@ class Page {
     configuration: PageSettings,
     engine: Engine
   ) {
-    this.configuration = Object.assign(defaultPageSettings, configuration);
+    
+    this.configuration = {
+      ...defaultPageSettings,
+      ...configuration
+    }
 
     this.handle = this.handle.bind(this);
     this.engine = engine;
