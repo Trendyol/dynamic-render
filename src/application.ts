@@ -29,7 +29,6 @@ class Application {
 
   init() {
     this.router.use(this.applicationInfoMiddleware);
-    this.router.get('/', this.handleStatus);
     this.configuration.pages.forEach(page => {
       this.router.get(page.configuration.matcher, page.handle);
     });
