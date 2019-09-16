@@ -5,14 +5,11 @@ import {Application, ApplicationConfig} from "./application";
 import {Hook, HookConfiguration} from "./hook";
 import {Interceptor, InterceptorConfiguration} from "./interceptor";
 import express from "express";
+import { LaunchOptions } from 'puppeteer';
 
 
-interface PrerenderDefaultConfiguration extends ServerConfiguration {
- puppeteer?: {
-   headless: boolean,
-   devtools: boolean,
-   ignoreHTTPSErrors: boolean,
- }
+interface PrerenderDefaultConfiguration  extends ServerConfiguration {
+ puppeteer: Partial<LaunchOptions>
 }
 
 const defaultConfiguration = {
@@ -45,7 +42,7 @@ class DynamicRender {
   async start(configuration?: PrerenderDefaultConfiguration) {
     this.configuration = {
       ...defaultConfiguration,
-      ...configuration
+      ...configuration,
     }
     await this.engine.init(this.configuration.puppeteer);
     await this.registerApplications();

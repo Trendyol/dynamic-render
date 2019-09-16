@@ -1,4 +1,4 @@
-import puppeteer, {Browser, EmulateOptions, LoadEvent} from "puppeteer";
+import puppeteer, {Browser, EmulateOptions, LoadEvent, LaunchOptions} from "puppeteer";
 import {Interceptor} from "./interceptor";
 import {Hook} from "./hook";
 import {ResponseCache} from "./response-cache";
@@ -24,7 +24,7 @@ class Engine {
     this.onResponse = this.onResponse.bind(this);
   }
 
-  async init(config?: any) {
+  async init(config?: Partial<LaunchOptions>) {
     this.browser = await puppeteer.launch({
       headless: true,
       ignoreHTTPSErrors: true,
