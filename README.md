@@ -46,6 +46,24 @@ dynamicRender
   });
 ```
 
+*(Optional) You can pass configuration parameters for debugging purposes*
+```js
+const config = {
+  puppeteer: {
+    headless: false,
+    ignoreHTTPSErrors: true,
+    devtools: true,
+  },
+  port: 8080
+}
+
+dynamicRender
+  .start(config)
+  .then(port => {
+    console.log(`Prerender listening on ${port}`);
+  });
+```
+
 Now you can send request to `http://localhost:8080/render/example-web/example/35235657`, dynamic render will respond with rendered content.
 
 

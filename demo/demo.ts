@@ -2,6 +2,7 @@ import dynamicRender from "../src";
 import fs from "fs";
 import * as path from "path";
 
+
 const placeholderPng = fs.readFileSync(path.join(__dirname, './png_placeholder'));
 const placeholderJpg = fs.readFileSync(path.join(__dirname, './jpg_placeholder'));
 
@@ -124,9 +125,17 @@ dynamicRender.application('mobile-web', {
   origin: 'https://m.trendyol.com'
 });
 
+const config = {
+  puppeteer: {
+    headless: false,
+    ignoreHTTPSErrors: true,
+    devtools: true,
+  },
+  port: 8080
+}
 
 dynamicRender
-  .start()
+  .start(config)
   .then(port => {
     console.log(`Prerender listening on ${port}`);
   });

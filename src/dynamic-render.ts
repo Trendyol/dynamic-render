@@ -8,11 +8,20 @@ import express from "express";
 
 
 interface PrerenderDefaultConfiguration extends ServerConfiguration {
-
+ puppeteer?: {
+   headless: boolean,
+   devtools: boolean,
+   ignoreHTTPSErrors: boolean,
+ }
 }
 
 const defaultConfiguration = {
-  port: 8080
+  port: 8080,
+  puppeteer: {
+    headless: true,
+    ignoreHTTPSErrors: true,
+    devtools: false,
+ }
 };
 
 class DynamicRender {
@@ -34,8 +43,11 @@ class DynamicRender {
   }
 
   async start(configuration?: PrerenderDefaultConfiguration) {
-    this.configuration = Object.assign(this.configuration, configuration);
-    await this.engine.init();
+    this.configuration = {
+      ...defaultConfiguration,
+      ...configuration
+    }
+    await this.engine.init(this.configuration.puppeteer);
     await this.registerApplications();
     return this.server.listen(this.configuration.port);
   }
