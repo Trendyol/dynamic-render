@@ -24,7 +24,7 @@ class Engine {
     this.onResponse = this.onResponse.bind(this);
   }
 
-  async init(config: any) {
+  async init(config?: any) {
     this.browser = await puppeteer.launch({
       headless: true,
       ignoreHTTPSErrors: true,
