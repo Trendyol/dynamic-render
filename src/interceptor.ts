@@ -19,10 +19,7 @@ class Interceptor {
   }
 
   handle(req: Request, respond: (options: RespondOptions) => void, block: () => void) {
-    const startTime = process.hrtime();
     this.handler(req, respond, block);
-    const hrend = process.hrtime(startTime);
-    console.info(`${this.name} [${req.url()}] hook execution time (hr): %ds %dms`, hrend[0], hrend[1] / 1000000);
   }
 }
 
