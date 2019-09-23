@@ -6,7 +6,6 @@ import {ApplicationRequest} from "./application";
 import {Engine} from "./engine";
 import {Omit} from "yargs";
 
-
 interface PageSettings {
   name: string;
   hooks?: Hook[];
@@ -15,6 +14,7 @@ interface PageSettings {
   emulateOptions?: EmulateOptions;
   waitMethod?: LoadEvent;
   cacheDurationSeconds?: number;
+  query?: object;
 }
 
 const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
@@ -32,7 +32,8 @@ const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
       isLandscape: false
     }
   },
-  waitMethod: "load"
+  waitMethod: "load",
+  query: {}
 };
 
 
@@ -55,9 +56,16 @@ class Page {
   }
 
   async handle(req: ApplicationRequest, res: express.Response) {
+    const url = new URL(`${req.application!.origin}${req.url}`)
+
+    for (const [key, value] of Object.entries(this.configuration.query))
+      url.searchParams.append(key, value)
+    
+    const _url = url.toString()
+
     const content = await this.engine.render({
       emulateOptions: this.configuration.emulateOptions,
-      url: `${req.application!.origin}${req.url}`,
+      url: _url,
       interceptors: this.configuration.interceptors,
       hooks: this.configuration.hooks,
       waitMethod: this.configuration.waitMethod
@@ -78,7 +86,8 @@ class Page {
       interceptors: this.configuration.interceptors.map(i => i.name),
       hooks: this.configuration.hooks.map(i => i.name),
       waitMethod: this.configuration.waitMethod,
-      emulateOptions: this.configuration.emulateOptions
+      emulateOptions: this.configuration.emulateOptions,
+      query: this.configuration.query,
     }
   }
 }

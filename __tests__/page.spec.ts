@@ -68,14 +68,15 @@ describe('[page.ts]', () => {
       interceptors: [configuration.interceptors![0].name],
       hooks: [configuration.hooks![0].name],
       waitMethod: configuration.waitMethod,
-      emulateOptions: configuration.emulateOptions
+      emulateOptions: configuration.emulateOptions,
+      query: {}
     }))
   });
 
   it('should call engine for render with cache control', async () => {
     // Arrange
-    const origin = faker.random.word();
-    const url = faker.random.word();
+    const url = '/';
+    const origin = faker.internet.url();
     const renderResponse = {
       status: 200,
       html: faker.random.word()
@@ -120,8 +121,8 @@ describe('[page.ts]', () => {
 
   it('should call engine for render without cache control', async () => {
     // Arrange
-    const origin = faker.random.word();
-    const url = faker.random.word();
+    const url = '/';
+    const origin = faker.internet.url();
     const renderResponse = {
       status: 404,
       html: faker.random.word()
@@ -134,12 +135,18 @@ describe('[page.ts]', () => {
       },
     };
 
+    const query = {
+      dr: true,
+      test: false,
+    }
+
     const configuration = {
       emulateOptions: faker.random.word(),
       interceptors: [faker.random.word()],
       hooks: [faker.random.word()],
       waitMethod: faker.random.word(),
-      cacheDurationSeconds: faker.random.number()
+      cacheDurationSeconds: faker.random.number(),
+      query
     };
 
     const page = new Page(configuration as any, engine);
@@ -148,10 +155,10 @@ describe('[page.ts]', () => {
       .expects('render')
       .withExactArgs({
         emulateOptions: configuration.emulateOptions,
-        url: origin + url,
+        url: origin + url + '?dr=true&test=false',
         interceptors: configuration.interceptors,
         hooks: configuration.hooks,
-        waitMethod: configuration.waitMethod,
+        waitMethod: configuration.waitMethod
       })
       .resolves(renderResponse);
 

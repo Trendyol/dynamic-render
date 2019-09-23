@@ -150,7 +150,11 @@ const productDetailPage = dynamicRender.page({
       isLandscape: false
     }
   },
-  waitMethod: 'load'
+  waitMethod: 'load',
+  query: {
+    test: 12345,
+    qa: 'GA-XXXXX'
+  }
 });
 ```
 
@@ -162,6 +166,7 @@ const productDetailPage = dynamicRender.page({
 | matcher        | true     | Matches url with page. Express-like matchers are accepted     |
 | emulateOptions | false    | Default values are provided below, rendering options          |
 | waitMethod     | false    | Default value is 'load', you can check Puppeteer wait methods |
+| query          | false    | Default value is '{}', you can pass query strings to matched url |
 
 Default emulate options are
 
