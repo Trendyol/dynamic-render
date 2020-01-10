@@ -189,7 +189,6 @@ describe('[engine.ts]', () => {
       cacheDisabled: false
     })).to.eq(true);
     expect(pageStub.setRequestInterception.calledWithExactly(true)).to.eq(true);
-    // HELP!
     expect(pageStub.on.calledWithExactly('request', sinon.match.func)).to.eq(true);
     expect(pageStub.on.calledWithExactly('response', engine.onResponse)).to.eq(true);
 
