@@ -7,6 +7,8 @@ export const createExpressResponseMock = (sandbox: SinonSandbox, props?: Record<
   set: sandbox.stub().returnsThis(),
   write: sandbox.stub().returnsThis(),
   status: sandbox.stub().returnsThis(),
+  headers: sandbox.stub().returnsThis(),
+  html: sandbox.stub().returnsThis(),
   ...props
 }) as any;
 
@@ -21,6 +23,7 @@ export const createPuppeteerRequest = (sandbox: SinonSandbox, props?: Record<str
   continue: sandbox.stub(),
   abort: sandbox.stub(),
   request: sandbox.stub(),
+  isNavigationRequest: sandbox.stub(),
   ...props
 }) as any;
 

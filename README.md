@@ -31,7 +31,8 @@ const examplePage = dynamicRender.page({
     name: 'example-page',
     hooks: [],
     interceptors: [],
-    matcher: '/example/:pageParam'
+    matcher: '/example/:pageParam',
+    followRedirects: false, // Dynamic render follow the requests redirects and respond directly to browser. Default "followRedirects" is true.
 });
 
 dynamicRender.application('example-web', {
@@ -229,7 +230,8 @@ const productDetailPage = dynamicRender.page({
   query: {
     test: 12345,
     qa: 'GA-XXXXX'
-  }
+  },
+  followRedirects: true
 });
 ```
 
@@ -242,6 +244,7 @@ const productDetailPage = dynamicRender.page({
 | emulateOptions | false    | Default values are provided below, rendering options          |
 | waitMethod     | false    | Default value is 'load', you can check Puppeteer wait methods |
 | query          | false    | Default value is '{}', you can pass query strings to matched url |
+| followRedirects          | false    | Default value is 'true', you can pass false for not for follow incoming redirects. |
 
 Default emulate options are
 

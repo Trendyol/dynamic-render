@@ -3,12 +3,17 @@ import {Interceptor} from "./interceptor";
 import {Hook} from "./hook";
 import {ResponseCache} from "./response-cache";
 
+interface XPage extends puppeteer.Page {
+  redirect?: puppeteer.Response
+}
+
 interface RenderOptions {
   emulateOptions: EmulateOptions,
   url: string,
   interceptors: Interceptor[],
   hooks: Hook[],
-  waitMethod: LoadEvent
+  waitMethod: LoadEvent,
+  followRedirects: boolean,
 }
 
 class Engine {
@@ -16,12 +21,12 @@ class Engine {
   private responseCache: ResponseCache;
 
   constructor(
-    responseCache: ResponseCache
+    responseCache: ResponseCache,
   ) {
     this.responseCache = responseCache;
-
     this.handleInterceptors = this.handleInterceptors.bind(this);
     this.onResponse = this.onResponse.bind(this);
+    this.onRequest = this.onRequest.bind(this);
   }
 
   async init(config?: Partial<LaunchOptions>) {
@@ -33,7 +38,7 @@ class Engine {
     });
   }
 
-  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[]): Promise<puppeteer.Page> {
+  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[], followRedirects: boolean): Promise<XPage> {
     const browserPage = await this.browser.newPage();
     await browserPage.emulate(emulateOptions);
     await (browserPage as any)._client.send('Network.setBypassServiceWorker', {bypass: true});
@@ -41,9 +46,9 @@ class Engine {
       cacheDisabled: false
     });
     await browserPage.setRequestInterception(true);
-    browserPage.on('request', this.onRequest.bind(this, interceptors));
+    // @ts-ignore
+    browserPage.on('request', (request) => this.onRequest(request, interceptors, browserPage, followRedirects));
     browserPage.on('response', this.onResponse);
-
     return browserPage;
   }
 
@@ -55,10 +60,18 @@ class Engine {
     };
 
     try {
-      browserPage = await this.createPage(options.emulateOptions, options.interceptors);
+      browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects);
       const navigationResult = await browserPage.goto(options.url, {waitUntil: options.waitMethod});
 
-      if (navigationResult) {
+      if (options.followRedirects && browserPage.redirect) {
+        const redirectRequest = browserPage.redirect;
+        const headers = redirectRequest.headers();
+        const status = redirectRequest.status();
+        renderStatus.status = status;
+        renderStatus.html = `Moved ${headers.location}`;
+        // @ts-ignore
+        renderStatus.headers = headers;
+      } else if (navigationResult) {
         if (typeof options.hooks != "undefined" && options.hooks.length > 0) {
           for (const hook of options.hooks) await hook.handle(browserPage);
         }
@@ -100,7 +113,12 @@ class Engine {
     await this.responseCache.setCache(response);
   }
 
-  async onRequest(interceptors: Interceptor[], request: puppeteer.Request) {
+  async onRequest(request: puppeteer.Request, interceptors: Interceptor[], browserPage: XPage, followRedirects: boolean) {
+    if (followRedirects && request.isNavigationRequest() && request.redirectChain().length && request.resourceType() === 'document') {
+      (browserPage.redirect as any) = request.redirectChain()[0].response();
+      return request.abort()
+    }
+
     if (await this.responseCache.request(request)) return;
 
     if (typeof interceptors !== "undefined" && interceptors.length > 0) {
