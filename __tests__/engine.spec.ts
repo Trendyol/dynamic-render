@@ -365,7 +365,7 @@ describe('[engine.ts]', () => {
       expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(content.status).to.eq(pageStatus);
-      expect(content.html).to.eq(`Moved ${pageHeaders.location}`);
+      expect(content.html).to.eq("");
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(hook.handle.calledWithExactly(pageStub)).to.eq(false);
     });

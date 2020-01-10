@@ -46,7 +46,7 @@ class Engine {
       cacheDisabled: false
     });
     await browserPage.setRequestInterception(true);
-    // @ts-ignore
+
     browserPage.on('request', (request) => this.onRequest(request, interceptors, browserPage, followRedirects));
     browserPage.on('response', this.onResponse);
     return browserPage;
@@ -54,7 +54,11 @@ class Engine {
 
   async render(options: RenderOptions) {
     let browserPage;
-    const renderStatus = {
+    const renderStatus: {
+      status: number,
+      html?: string,
+      headers?: Record<string, string>, 
+    } = {
       status: 404,
       html: ''
     };
@@ -68,8 +72,6 @@ class Engine {
         const headers = redirectRequest.headers();
         const status = redirectRequest.status();
         renderStatus.status = status;
-        renderStatus.html = `Moved ${headers.location}`;
-        // @ts-ignore
         renderStatus.headers = headers;
       } else if (navigationResult) {
         if (typeof options.hooks != "undefined" && options.hooks.length > 0) {

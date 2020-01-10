@@ -74,18 +74,19 @@ class Page {
       followRedirects: this.configuration.followRedirects
     });
 
-  // @ts-ignore
     if (content.status === 200 && this.configuration.cacheDurationSeconds) {
       res.set('cache-control', `max-age=${this.configuration.cacheDurationSeconds}, public`);
     }
 
-    // @ts-ignore
     if (content.headers) {
-      // @ts-ignore
-      res.set(content.headers).status(content.status).end();
+      res
+        .set(content.headers)
+        .status(content.status)
+        .end();
     } else {
-      // @ts-ignore
-      res.status(content.status).send(content.html);
+      res
+        .status(content.status)
+        .send(content.html);
     }
   }
 
