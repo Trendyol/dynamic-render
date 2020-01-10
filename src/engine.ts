@@ -3,7 +3,7 @@ import {Interceptor} from "./interceptor";
 import {Hook} from "./hook";
 import {ResponseCache} from "./response-cache";
 
-interface XPage extends puppeteer.Page {
+interface CustomPage extends puppeteer.Page {
   redirect?: puppeteer.Response
 }
 
@@ -38,7 +38,7 @@ class Engine {
     });
   }
 
-  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[], followRedirects: boolean): Promise<XPage> {
+  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[], followRedirects: boolean): Promise<CustomPage> {
     const browserPage = await this.browser.newPage();
     await browserPage.emulate(emulateOptions);
     await (browserPage as any)._client.send('Network.setBypassServiceWorker', {bypass: true});
@@ -113,7 +113,7 @@ class Engine {
     await this.responseCache.setCache(response);
   }
 
-  async onRequest(request: puppeteer.Request, interceptors: Interceptor[], browserPage: XPage, followRedirects: boolean) {
+  async onRequest(request: puppeteer.Request, interceptors: Interceptor[], browserPage: CustomPage, followRedirects: boolean) {
     if (followRedirects && request.isNavigationRequest() && request.redirectChain().length && request.resourceType() === 'document') {
       (browserPage.redirect as any) = request.redirectChain()[0].response();
       return request.abort()

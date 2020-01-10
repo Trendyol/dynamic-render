@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 
 interface ResourceCacheContent {
   status: number;
-  headers: any;
+  headers: Record<string, string>;
   body: Buffer;
   expires: number;
 }
