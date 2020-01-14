@@ -15,6 +15,7 @@ interface PageSettings {
   waitMethod?: LoadEvent;
   cacheDurationSeconds?: number;
   query?: object;
+  followRedirects?: boolean;
 }
 
 const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
@@ -33,7 +34,8 @@ const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
     }
   },
   waitMethod: "load",
-  query: {}
+  query: {},
+  followRedirects: true
 };
 
 
@@ -68,16 +70,24 @@ class Page {
       url: _url,
       interceptors: this.configuration.interceptors,
       hooks: this.configuration.hooks,
-      waitMethod: this.configuration.waitMethod
+      waitMethod: this.configuration.waitMethod,
+      followRedirects: this.configuration.followRedirects
     });
 
     if (content.status === 200 && this.configuration.cacheDurationSeconds) {
       res.set('cache-control', `max-age=${this.configuration.cacheDurationSeconds}, public`);
     }
 
-    res
-      .status(content.status)
-      .send(content.html);
+    if (content.headers) {
+      res
+        .set(content.headers)
+        .status(content.status)
+        .end();
+    } else {
+      res
+        .status(content.status)
+        .send(content.html);
+    }
   }
 
   toJSON() {
@@ -88,6 +98,7 @@ class Page {
       waitMethod: this.configuration.waitMethod,
       emulateOptions: this.configuration.emulateOptions,
       query: this.configuration.query,
+      followRedirects: this.configuration.followRedirects,
     }
   }
 }

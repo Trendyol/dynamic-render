@@ -69,7 +69,8 @@ describe('[page.ts]', () => {
       hooks: [configuration.hooks![0].name],
       waitMethod: configuration.waitMethod,
       emulateOptions: configuration.emulateOptions,
-      query: {}
+      query: {},
+      followRedirects: true
     }))
   });
 
@@ -94,7 +95,8 @@ describe('[page.ts]', () => {
       interceptors: [faker.random.word()],
       hooks: [faker.random.word()],
       waitMethod: faker.random.word(),
-      cacheDurationSeconds: faker.random.number()
+      cacheDurationSeconds: faker.random.number(),
+      followRedirects: false
     };
 
     const page = new Page(configuration as any, engine);
@@ -107,6 +109,7 @@ describe('[page.ts]', () => {
         interceptors: configuration.interceptors,
         hooks: configuration.hooks,
         waitMethod: configuration.waitMethod,
+        followRedirects: configuration.followRedirects,
       })
       .resolves(renderResponse);
 
@@ -138,7 +141,7 @@ describe('[page.ts]', () => {
     const query = {
       dr: true,
       test: false,
-    }
+    };
 
     const configuration = {
       emulateOptions: faker.random.word(),
@@ -146,7 +149,8 @@ describe('[page.ts]', () => {
       hooks: [faker.random.word()],
       waitMethod: faker.random.word(),
       cacheDurationSeconds: faker.random.number(),
-      query
+      query,
+      followRedirects: false
     };
 
     const page = new Page(configuration as any, engine);
@@ -158,7 +162,8 @@ describe('[page.ts]', () => {
         url: origin + url + '?dr=true&test=false',
         interceptors: configuration.interceptors,
         hooks: configuration.hooks,
-        waitMethod: configuration.waitMethod
+        waitMethod: configuration.waitMethod,
+        followRedirects: configuration.followRedirects
       })
       .resolves(renderResponse);
 
@@ -169,5 +174,59 @@ describe('[page.ts]', () => {
     expect(response.set.called).to.eq(false);
     expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
     expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
+  });
+  it('should follow redirects when config is set false', async () => {
+    // Arrange
+    const url = '/';
+    const origin = faker.internet.url();
+    const renderResponse = {
+      status: 301,
+      html: 'Moved',
+      headers: {
+        location: 'https://test.com'
+      }
+    };
+    const response = createExpressResponseMock(sandbox);
+    const request = {
+      url,
+      application: {
+        origin
+      },
+    };
+
+    const query = {
+      dr: true,
+      test: false,
+    };
+
+    const configuration = {
+      emulateOptions: faker.random.word(),
+      interceptors: [faker.random.word()],
+      hooks: [faker.random.word()],
+      waitMethod: faker.random.word(),
+      cacheDurationSeconds: faker.random.number(),
+      query,
+      followRedirects: false
+    };
+
+    const page = new Page(configuration as any, engine);
+
+    engineMock
+      .expects('render')
+      .withExactArgs({
+        emulateOptions: configuration.emulateOptions,
+        url: origin + url + '?dr=true&test=false',
+        interceptors: configuration.interceptors,
+        hooks: configuration.hooks,
+        waitMethod: configuration.waitMethod,
+        followRedirects: configuration.followRedirects
+      })
+      .resolves(renderResponse);
+
+    // Act
+    await page.handle(request as any, response);
+    // Assert
+    expect(response.set.called).to.eq(true);
+    expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
   });
 });

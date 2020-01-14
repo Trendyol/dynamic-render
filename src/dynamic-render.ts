@@ -17,8 +17,8 @@ const defaultConfiguration = {
   puppeteer: {
     headless: true,
     ignoreHTTPSErrors: true,
-    devtools: false,
- }
+    devtools: false
+  },
 };
 
 class DynamicRender {
