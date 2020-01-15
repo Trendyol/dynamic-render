@@ -65,15 +65,14 @@ class Engine {
 
     try {
       browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects);
+    } catch (error) {
+      return renderStatus;
+    }
+
+    try {
       const navigationResult = await browserPage.goto(options.url, {waitUntil: options.waitMethod});
 
-      if (options.followRedirects && browserPage.redirect) {
-        const redirectRequest = browserPage.redirect;
-        const headers = redirectRequest.headers();
-        const status = redirectRequest.status();
-        renderStatus.status = status;
-        renderStatus.headers = headers;
-      } else if (navigationResult) {
+      if (navigationResult) {
         if (typeof options.hooks != "undefined" && options.hooks.length > 0) {
           for (const hook of options.hooks) await hook.handle(browserPage);
         }
@@ -82,12 +81,18 @@ class Engine {
         renderStatus.html = pageContent;
       }
     } catch (e) {
-      console.error(e);
+      if (options.followRedirects && browserPage.redirect) {
+        const redirectRequest = browserPage.redirect;
+        const headers = redirectRequest.headers();
+        const status = redirectRequest.status();
+        renderStatus.status = status;
+        renderStatus.headers = headers;
+      }
     }
 
-    if (browserPage) {
-      await browserPage.close();
-    }
+
+    await browserPage.close();
+
 
     return renderStatus;
   }

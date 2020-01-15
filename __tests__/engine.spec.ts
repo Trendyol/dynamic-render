@@ -265,14 +265,13 @@ describe('[engine.ts]', () => {
     it('should handle render process (page creation failed)', async () => {
       // Arrange
       const renderOptions = {
-        followRedirects: true,
+        followRedirects: false,
         emulateOptions: {},
         url: faker.random.word(),
         waitMethod: faker.random.word(),
         hooks: [],
         interceptors: []
       };
-      const errorStub = sandbox.stub(console, "error");
       const createPageError = new Error(faker.random.word())
       const createPageStub = sandbox.stub(engine, 'createPage').rejects(createPageError);
 
@@ -285,8 +284,6 @@ describe('[engine.ts]', () => {
         status: 404,
         html: ''
       });
-
-      expect(errorStub.calledWithExactly(createPageError)).to.deep.equal(true)
     });
 
 
@@ -331,7 +328,7 @@ describe('[engine.ts]', () => {
     it('should handle render process (with followRedirect)', async () => {
       // Arrange
       const pageHeaders = { location: faker.internet.url() };
-      const pageContent = `Moved ${pageHeaders.location}`;
+      const pageContent = '';
       const pageStatus = 301;
       const pageStub = {
         goto: sandbox.stub().returns({
@@ -367,14 +364,12 @@ describe('[engine.ts]', () => {
       expect(content.status).to.eq(pageStatus);
       expect(content.html).to.eq("");
       expect(pageStub.close.calledOnce).to.eq(true);
-      expect(hook.handle.calledWithExactly(pageStub)).to.eq(false);
     });
 
     it('should handle render process (navigation fails)', async () => {
       // Arrange
       const pageContent = faker.random.word();
       const goToStubError=new Error(faker.random.word());
-      const consoleStub = sandbox.stub(console,"error");
       const pageStub = {
         goto: sandbox.stub().rejects(goToStubError),
         content: sandbox.stub().returns(pageContent),
@@ -401,7 +396,6 @@ describe('[engine.ts]', () => {
         status: 404,
         html: '',
       });
-      expect(consoleStub.calledWithExactly(goToStubError)).to.deep.equal(true)
     });
   });
 
