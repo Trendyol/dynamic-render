@@ -85,6 +85,7 @@ class Engine {
         const redirectRequest = browserPage.redirect;
         const headers = redirectRequest.headers();
         const status = redirectRequest.status();
+        headers.location = headers.location.replace(/\??dr=true/, '');
         renderStatus.status = status;
         renderStatus.headers = headers;
       }
