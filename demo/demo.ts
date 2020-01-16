@@ -116,7 +116,7 @@ const productDetailPage = dynamicRender.page({
   name: 'product-detail',
   hooks: [clearCss, lazyImageReplacer],
   interceptors: [jsInterceptor, imageInterceptor, cssInterceptor, xhrInterceptor],
-  matcher: '/:brandName/:productName-p-:productContentId(\\d+)$'
+  matcher: '/*'
 });
 
 
