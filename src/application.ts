@@ -37,7 +37,7 @@ class Application {
       this.router.get(page.configuration.matcher, page.handle);
     });
 
-    if (typeof this.configuration.plugins !== "undefined") {
+    if (Array.isArray(this.configuration.plugins)) {
       this.configuration.pages.forEach(page => {
        page.plugins = this.configuration.plugins!;
       });

@@ -11,12 +11,10 @@ let engine: Engine;
 
 const cache = {
   setCache: () => {
-    console.trace();
-    throw new Error('Mocked method call');
+    throw new Error('Mocked method call: cache.setCache');
   },
   request: () => {
-    console.trace();
-    throw new Error('Mocked method call');
+    throw new Error('Mocked method call: cache.request');
   }
 } as any;
 
