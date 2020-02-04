@@ -1,7 +1,13 @@
-import puppeteer, {Browser, EmulateOptions, LoadEvent, LaunchOptions} from "puppeteer";
+import puppeteer, {Browser, EmulateOptions, LaunchOptions, LoadEvent} from "puppeteer";
 import {Interceptor} from "./interceptor";
 import {Hook} from "./hook";
 import {ResponseCache} from "./response-cache";
+
+interface RenderResult {
+  status: number,
+  html?: string,
+  headers?: Record<string, string>
+}
 
 interface CustomPage extends puppeteer.Page {
   redirect?: puppeteer.Response
@@ -54,11 +60,7 @@ class Engine {
 
   async render(options: RenderOptions) {
     let browserPage;
-    const renderStatus: {
-      status: number,
-      html?: string,
-      headers?: Record<string, string>, 
-    } = {
+    const renderResult: RenderResult = {
       status: 404,
       html: ''
     };
@@ -66,7 +68,7 @@ class Engine {
     try {
       browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects);
     } catch (error) {
-      return renderStatus;
+      return renderResult;
     }
 
     try {
@@ -77,8 +79,8 @@ class Engine {
           for (const hook of options.hooks) await hook.handle(browserPage);
         }
         const pageContent = await browserPage.content();
-        renderStatus.status = navigationResult.status();
-        renderStatus.html = pageContent;
+        renderResult.status = navigationResult.status();
+        renderResult.html = pageContent;
       }
     } catch (e) {
       if (options.followRedirects && browserPage.redirect) {
@@ -86,8 +88,8 @@ class Engine {
         const headers = redirectRequest.headers();
         const status = redirectRequest.status();
         headers.location = headers.location.replace(/\??dr=true/, '');
-        renderStatus.status = status;
-        renderStatus.headers = headers;
+        renderResult.status = status;
+        renderResult.headers = headers;
       }
     }
 
@@ -95,7 +97,7 @@ class Engine {
     await browserPage.close();
 
 
-    return renderStatus;
+    return renderResult;
   }
 
   async handleInterceptors(interceptors: Interceptor[], request: puppeteer.Request) {
@@ -138,5 +140,6 @@ class Engine {
 }
 
 export {
+  RenderResult,
   Engine
 }
