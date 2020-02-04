@@ -246,6 +246,7 @@ describe('[page.ts]', () => {
         application: {
           origin
         },
+        originalUrl: faker.random.word()
       };
 
       const configuration = {
@@ -272,7 +273,7 @@ describe('[page.ts]', () => {
       await page.handle(request as any, response);
 
       // Assert
-      expect(plugin.onBeforeRender.calledWithExactly(page, request.application.origin + request.url)).to.eq(true);
+      expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
@@ -292,6 +293,7 @@ describe('[page.ts]', () => {
         application: {
           origin
         },
+        originalUrl: faker.random.word()
       };
 
       const configuration = {
@@ -326,8 +328,8 @@ describe('[page.ts]', () => {
       await page.handle(request as any, response);
 
       // Assert
-      expect(plugin.onBeforeRender.calledWithExactly(page, request.application.origin + request.url)).to.eq(true);
-      expect(plugin.onAfterRender.calledWithExactly(page, request.application.origin + request.url, renderResponse)).to.eq(true);
+      expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
@@ -347,6 +349,7 @@ describe('[page.ts]', () => {
         application: {
           origin
         },
+        originalUrl: faker.random.word()
       };
 
       const configuration = {
@@ -381,8 +384,8 @@ describe('[page.ts]', () => {
       await page.handle(request as any, response);
 
       // Assert
-      expect(plugin.onBeforeRender.calledWithExactly(page, request.application.origin + request.url)).to.eq(true);
-      expect(plugin.onAfterRender.calledWithExactly(page, request.application.origin + request.url, renderResponse)).to.eq(true);
+      expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);

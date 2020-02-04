@@ -73,7 +73,7 @@ class Page {
   async handle(req: ApplicationRequest, res: express.Response) {
     const url = this.convertRequestToUrl(req);
 
-    if (await this.onBeforeRender(this, url, res)) return;
+    if (await this.onBeforeRender(this, req.originalUrl, res)) return;
 
     const content = await this.engine.render({
       emulateOptions: this.configuration.emulateOptions,
@@ -84,7 +84,7 @@ class Page {
       followRedirects: this.configuration.followRedirects
     });
 
-    await this.onAfterRender(this, url, res, content);
+    await this.onAfterRender(this, req.originalUrl, res, content);
 
     this.handleRenderResponse(content, res);
   }
