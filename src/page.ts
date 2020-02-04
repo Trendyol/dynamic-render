@@ -64,13 +64,12 @@ class Page {
   async handle(req: ApplicationRequest, res: express.Response) {
     const url = new URL(`${req.application!.origin}${req.url}`);
 
-
     for (const [key, value] of Object.entries(this.configuration.query))
       url.searchParams.append(key, value);
 
     const _url = url.toString();
 
-    await this.runPlugins('onBeforeRender', this, _url, res);
+    if(await this.runPlugins('onBeforeRender', this, _url, res)) return;
 
     const content = await this.engine.render({
       emulateOptions: this.configuration.emulateOptions,
@@ -126,6 +125,8 @@ class Page {
         .status(content.status)
         .send(content.html);
     }
+
+    return content;
   }
 
   toJSON() {

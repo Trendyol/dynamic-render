@@ -12,7 +12,7 @@ interface ApplicationConfig {
 }
 
 interface ApplicationRequest extends express.Request {
-  application?: {git
+  application?: {
     origin: string;
     emulateOptions?: EmulateOptions
   }

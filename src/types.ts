@@ -4,7 +4,7 @@ import {RenderResult} from "./engine";
 interface Plugin {
   onBeforeStart?: () => Promise<void>;
 
-  onBeforeRender?: (page: Page, url: string) => Promise<void> | Promise<RenderResult>;
+  onBeforeRender?: (page: Page, url: string) => Promise<void | RenderResult>;
 
   onAfterRender?: (page: Page, url: string, renderResult: RenderResult) => Promise<void>;
 }
