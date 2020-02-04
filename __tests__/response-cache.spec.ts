@@ -7,6 +7,7 @@ import {createPuppeteerRequest, createPuppeteerResponse} from "./helpers";
 const sandbox = sinon.createSandbox();
 let responseCache: ResponseCache;
 
+
 describe('[response-cache.ts]', () => {
   beforeEach(() => {
     responseCache = new ResponseCache()

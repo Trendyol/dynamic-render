@@ -9,7 +9,17 @@ import {createPuppeteerRequest, createPuppeteerResponse} from "./helpers";
 const sandbox = sinon.createSandbox();
 let engine: Engine;
 
-const cache = new ResponseCache();
+const cache = {
+  setCache: () => {
+    console.trace();
+    throw new Error('Mocked method call');
+  },
+  request: () => {
+    console.trace();
+    throw new Error('Mocked method call');
+  }
+} as any;
+
 let cacheMock: SinonMock;
 
 describe('[engine.ts]', () => {
@@ -136,6 +146,9 @@ describe('[engine.ts]', () => {
         on: sandbox.stub().withArgs("request", sinon.match.func).callsArgWith(1, request),
         setRequestInterception: sandbox.stub()
       };
+
+      cacheMock.expects('request').once();
+      cacheMock.expects('setCache').once();
 
       const browserStub = {
         newPage: sandbox.stub().returns(pageStub)

@@ -12,7 +12,9 @@ class ResponseCache {
 
   async setCache(response: puppeteer.Response) {
     const url = response.url();
+
     const headers = response.headers();
+    const status =  response.status();
     const maxAge = this.getMaxAge(headers['cache-control']);
 
     if (maxAge) {
@@ -27,8 +29,8 @@ class ResponseCache {
       }
 
       this.cache.set(url, {
-        status: response.status(),
-        headers: response.headers(),
+        status,
+        headers,
         body: buffer,
 
         // todo leak

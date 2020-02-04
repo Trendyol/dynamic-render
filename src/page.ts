@@ -5,7 +5,7 @@ import {Interceptor} from "./interceptor";
 import {ApplicationRequest} from "./application";
 import {Engine, RenderResult} from "./engine";
 import {Omit} from "yargs";
-import {Plugin, PluginEvents} from "./types";
+import {Plugin} from "./types";
 
 interface PageSettings {
   name: string;
@@ -61,53 +61,52 @@ class Page {
     this.engine = engine;
   }
 
-  async handle(req: ApplicationRequest, res: express.Response) {
+  private convertRequestToUrl(req: ApplicationRequest) {
     const url = new URL(`${req.application!.origin}${req.url}`);
 
     for (const [key, value] of Object.entries(this.configuration.query))
       url.searchParams.append(key, value);
 
-    const _url = url.toString();
+    return url.toString();
+  }
 
-    if(await this.runPlugins('onBeforeRender', this, _url, res)) return;
+  async handle(req: ApplicationRequest, res: express.Response) {
+    const url = this.convertRequestToUrl(req);
+
+    if (await this.onBeforeRender(this, url, res)) return;
 
     const content = await this.engine.render({
       emulateOptions: this.configuration.emulateOptions,
-      url: _url,
+      url: url,
       interceptors: this.configuration.interceptors,
       hooks: this.configuration.hooks,
       waitMethod: this.configuration.waitMethod,
       followRedirects: this.configuration.followRedirects
     });
 
-    await this.runPlugins('onAfterRender', this, _url, res, content);
+    await this.onAfterRender(this, url, res, content);
 
     this.handleRenderResponse(content, res);
   }
 
-  private async runPlugins(timing: PluginEvents, page: Page, url: string, res: express.Response, content?: RenderResult) {
-    const pluginHandler: Record<PluginEvents, (page: Page, url: string, res: express.Response, content?: RenderResult) => Promise<void | RenderResult>> = {
-      onBeforeRender: async (page, req, res, content) => {
-        for (let plugin of this.plugins) {
-          if (plugin.onBeforeRender) {
-            const pluginResponse = await plugin.onBeforeRender(this, url);
+  private async onBeforeRender(page: Page, url: string, res: express.Response) {
+    for (let plugin of this.plugins) {
+      if (plugin.onBeforeRender) {
+        const pluginResponse = await plugin.onBeforeRender(page, url);
 
-            if (pluginResponse) {
-              return this.handleRenderResponse(pluginResponse, res);
-            }
-          }
+        if (pluginResponse) {
+          return this.handleRenderResponse(pluginResponse, res);
         }
-      },
-      onAfterRender: async (page, url, res, content) => {
-        await Promise.all(this.plugins.map(async plugin => {
-          if (plugin.onAfterRender && content) {
-            return plugin.onAfterRender(this, url, content);
-          }
-        }))
       }
-    };
+    }
+  }
 
-    return pluginHandler[timing](page, url, res, content);
+  private async onAfterRender(page: Page, url: string, res?: express.Response, content?: RenderResult) {
+    await Promise.all(this.plugins.map(async plugin => {
+      if (plugin.onAfterRender && content) {
+        return plugin.onAfterRender(page, url, content);
+      }
+    }))
   }
 
   private handleRenderResponse(content: RenderResult, res: express.Response) {
