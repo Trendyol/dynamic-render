@@ -281,3 +281,36 @@ dynamicRender.application('mobile-web', {
 | pages          | true     | Array of Pages                                           |
 | origin         | true     | http://targethost.com                                    |
 | emulateOptions | false    | Application level emulate options that affects all pages |
+| plugins | false    | Plugin instance can be used for custom caching strategies |
+
+
+### Plugins
+Plugins can be injected into applications to program custom caching strategies.
+
+```typescript
+class CachePlugin implements Plugin {
+  private cache: Map<string, RenderResult> = new Map();
+
+  async onBeforeStart(){
+    console.log('Make some connections');
+  }
+
+  async onBeforeRender(page: Page, url: string){
+    const existing = this.cache.get(url);
+
+    if(existing){
+      return existing;
+    }
+  }
+
+  async onAfterRender(page: Page, url: string, renderResult: RenderResult){
+    this.cache.set(url, renderResult);
+  }
+}
+
+dynamicRender.application('mobile-web', {
+  pages: [productDetailPage],
+  origin: 'https://m.trendyol.com',
+  plugins: [new CachePlugin()]
+});
+```

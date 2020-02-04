@@ -1,6 +1,9 @@
 import dynamicRender from "../src";
 import fs from "fs";
 import * as path from "path";
+import {Plugin} from "../src/types";
+import {Page} from "../src/page";
+import {RenderResult} from "../src/engine";
 
 
 const placeholderPng = fs.readFileSync(path.join(__dirname, './png_placeholder'));
@@ -119,10 +122,32 @@ const productDetailPage = dynamicRender.page({
   matcher: '/*'
 });
 
+class CachePlugin implements Plugin {
+  private cache: Map<string, RenderResult> = new Map();
+
+  async onBeforeStart(){
+    console.log('Make some connections');
+  }
+
+  async onBeforeRender(page: Page, url: string){
+    const existing = this.cache.get(url);
+
+    if(existing){
+      return existing;
+    }
+  }
+
+  async onAfterRender(page: Page, url: string, renderResult: RenderResult){
+    this.cache.set(url, renderResult);
+  }
+}
+
+
 
 dynamicRender.application('mobile-web', {
   pages: [productDetailPage],
-  origin: 'https://m.trendyol.com'
+  origin: 'https://m.trendyol.com',
+  plugins: [new CachePlugin()]
 });
 
 const config = {
@@ -132,7 +157,7 @@ const config = {
     devtools: true,
   },
   port: 8080
-}
+};
 
 dynamicRender
   .start(config)

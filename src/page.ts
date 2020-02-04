@@ -3,8 +3,9 @@ import {Hook} from "./hook";
 import express from "express";
 import {Interceptor} from "./interceptor";
 import {ApplicationRequest} from "./application";
-import {Engine} from "./engine";
+import {Engine, RenderResult} from "./engine";
 import {Omit} from "yargs";
+import {Plugin} from "./types";
 
 interface PageSettings {
   name: string;
@@ -41,39 +42,74 @@ const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
 
 class Page {
   readonly configuration: Required<PageSettings>;
+  public plugins: Plugin[];
   private readonly engine: Engine;
 
   constructor(
     configuration: PageSettings,
-    engine: Engine
+    engine: Engine,
+    plugins: Plugin[] = []
   ) {
-    
+
     this.configuration = {
       ...defaultPageSettings,
       ...configuration
-    }
+    };
 
+    this.plugins = plugins;
     this.handle = this.handle.bind(this);
     this.engine = engine;
   }
 
-  async handle(req: ApplicationRequest, res: express.Response) {
-    const url = new URL(`${req.application!.origin}${req.url}`)
+  private convertRequestToUrl(req: ApplicationRequest) {
+    const url = new URL(`${req.application!.origin}${req.url}`);
 
     for (const [key, value] of Object.entries(this.configuration.query))
-      url.searchParams.append(key, value)
-    
-    const _url = url.toString()
+      url.searchParams.append(key, value);
+
+    return url.toString();
+  }
+
+  async handle(req: ApplicationRequest, res: express.Response) {
+    const url = this.convertRequestToUrl(req);
+
+    if (await this.onBeforeRender(this, url, res)) return;
 
     const content = await this.engine.render({
       emulateOptions: this.configuration.emulateOptions,
-      url: _url,
+      url: url,
       interceptors: this.configuration.interceptors,
       hooks: this.configuration.hooks,
       waitMethod: this.configuration.waitMethod,
       followRedirects: this.configuration.followRedirects
     });
 
+    await this.onAfterRender(this, url, res, content);
+
+    this.handleRenderResponse(content, res);
+  }
+
+  private async onBeforeRender(page: Page, url: string, res: express.Response) {
+    for (let plugin of this.plugins) {
+      if (plugin.onBeforeRender) {
+        const pluginResponse = await plugin.onBeforeRender(page, url);
+
+        if (pluginResponse) {
+          return this.handleRenderResponse(pluginResponse, res);
+        }
+      }
+    }
+  }
+
+  private async onAfterRender(page: Page, url: string, res?: express.Response, content?: RenderResult) {
+    await Promise.all(this.plugins.map(async plugin => {
+      if (plugin.onAfterRender && content) {
+        return plugin.onAfterRender(page, url, content);
+      }
+    }))
+  }
+
+  private handleRenderResponse(content: RenderResult, res: express.Response) {
     if (content.status === 200 && this.configuration.cacheDurationSeconds) {
       res.set('cache-control', `max-age=${this.configuration.cacheDurationSeconds}, public`);
     }
@@ -83,11 +119,13 @@ class Page {
         .set(content.headers)
         .status(content.status)
         .end();
-    } else {
+    } else {
       res
         .status(content.status)
         .send(content.html);
     }
+
+    return content;
   }
 
   toJSON() {

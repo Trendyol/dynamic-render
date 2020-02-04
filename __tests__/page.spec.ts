@@ -175,6 +175,7 @@ describe('[page.ts]', () => {
     expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
     expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
   });
+
   it('should follow redirects when config is set false', async () => {
     // Arrange
     const url = '/';
@@ -228,5 +229,215 @@ describe('[page.ts]', () => {
     // Assert
     expect(response.set.called).to.eq(true);
     expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+  });
+
+  describe('Page plugins', () => {
+    it('should return response from cache', async () => {
+      // Arrange
+      const url = '/';
+      const origin = faker.internet.url();
+      const renderResponse = {
+        status: 200,
+        html: faker.random.word()
+      };
+      const response = createExpressResponseMock(sandbox);
+      const request = {
+        url,
+        application: {
+          origin
+        },
+      };
+
+      const configuration = {
+        emulateOptions: faker.random.word(),
+        interceptors: [faker.random.word()],
+        hooks: [faker.random.word()],
+        waitMethod: faker.random.word(),
+        cacheDurationSeconds: faker.random.number(),
+        followRedirects: false,
+      };
+
+      const plugin = {
+        onBeforeRender: sandbox.stub().resolves(renderResponse),
+        onAfterRender: sandbox.stub()
+      };
+
+      const page = new Page(configuration as any, engine, [plugin]);
+
+      engineMock
+        .expects('render')
+        .never();
+
+      // Act
+      await page.handle(request as any, response);
+
+      // Assert
+      expect(plugin.onBeforeRender.calledWithExactly(page, request.application.origin + request.url)).to.eq(true);
+      expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
+      expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+      expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
+    });
+
+    it('should continue on cache miss', async () => {
+      // Arrange
+      const url = '/';
+      const origin = faker.internet.url();
+      const renderResponse = {
+        status: 200,
+        html: faker.random.word()
+      };
+      const response = createExpressResponseMock(sandbox);
+      const request = {
+        url,
+        application: {
+          origin
+        },
+      };
+
+      const configuration = {
+        emulateOptions: faker.random.word(),
+        interceptors: [faker.random.word()],
+        hooks: [faker.random.word()],
+        waitMethod: faker.random.word(),
+        cacheDurationSeconds: faker.random.number(),
+        followRedirects: false,
+      };
+
+      const plugin = {
+        onBeforeRender: sandbox.stub().resolves(),
+        onAfterRender: sandbox.stub().resolves()
+      };
+
+      const page = new Page(configuration as any, engine, [plugin]);
+
+      engineMock
+        .expects('render')
+        .withExactArgs({
+          emulateOptions: configuration.emulateOptions,
+          url: origin + url,
+          interceptors: configuration.interceptors,
+          hooks: configuration.hooks,
+          waitMethod: configuration.waitMethod,
+          followRedirects: configuration.followRedirects
+        })
+        .resolves(renderResponse);
+
+      // Act
+      await page.handle(request as any, response);
+
+      // Assert
+      expect(plugin.onBeforeRender.calledWithExactly(page, request.application.origin + request.url)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request.application.origin + request.url, renderResponse)).to.eq(true);
+      expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
+      expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+      expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
+    });
+
+    it('should call on after render', async () => {
+      // Arrange
+      const url = '/';
+      const origin = faker.internet.url();
+      const renderResponse = {
+        status: 200,
+        html: faker.random.word()
+      };
+      const response = createExpressResponseMock(sandbox);
+      const request = {
+        url,
+        application: {
+          origin
+        },
+      };
+
+      const configuration = {
+        emulateOptions: faker.random.word(),
+        interceptors: [faker.random.word()],
+        hooks: [faker.random.word()],
+        waitMethod: faker.random.word(),
+        cacheDurationSeconds: faker.random.number(),
+        followRedirects: false,
+      };
+
+      const plugin = {
+        onBeforeRender: sandbox.stub().resolves(),
+        onAfterRender: sandbox.stub().resolves()
+      };
+
+      const page = new Page(configuration as any, engine, [plugin]);
+
+      engineMock
+        .expects('render')
+        .withExactArgs({
+          emulateOptions: configuration.emulateOptions,
+          url: origin + url,
+          interceptors: configuration.interceptors,
+          hooks: configuration.hooks,
+          waitMethod: configuration.waitMethod,
+          followRedirects: configuration.followRedirects
+        })
+        .resolves(renderResponse);
+
+      // Act
+      await page.handle(request as any, response);
+
+      // Assert
+      expect(plugin.onBeforeRender.calledWithExactly(page, request.application.origin + request.url)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request.application.origin + request.url, renderResponse)).to.eq(true);
+      expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
+      expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+      expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
+    });
+
+    it('should pass listeners if none of them registered', async () => {
+      // Arrange
+      const url = '/';
+      const origin = faker.internet.url();
+      const renderResponse = {
+        status: 200,
+        html: faker.random.word()
+      };
+      const response = createExpressResponseMock(sandbox);
+      const request = {
+        url,
+        application: {
+          origin
+        },
+      };
+
+      const configuration = {
+        emulateOptions: faker.random.word(),
+        interceptors: [faker.random.word()],
+        hooks: [faker.random.word()],
+        waitMethod: faker.random.word(),
+        cacheDurationSeconds: faker.random.number(),
+        followRedirects: false,
+      };
+
+      const plugin = {
+
+      };
+
+      const page = new Page(configuration as any, engine, [plugin]);
+
+      engineMock
+        .expects('render')
+        .withExactArgs({
+          emulateOptions: configuration.emulateOptions,
+          url: origin + url,
+          interceptors: configuration.interceptors,
+          hooks: configuration.hooks,
+          waitMethod: configuration.waitMethod,
+          followRedirects: configuration.followRedirects
+        })
+        .resolves(renderResponse);
+
+      // Act
+      await page.handle(request as any, response);
+
+      // Assert
+      expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
+      expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
+      expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
+    });
   });
 });

@@ -1,11 +1,14 @@
 import {Page} from "./page";
 import {EmulateOptions} from "puppeteer";
 import express from "express";
+import {Plugin} from "./types";
+
 
 interface ApplicationConfig {
   origin: string;
   pages: Page[];
   emulateOptions?: EmulateOptions;
+  plugins?: Plugin[];
 }
 
 interface ApplicationRequest extends express.Request {
@@ -27,11 +30,24 @@ class Application {
     this.handleStatus = this.handleStatus.bind(this);
   }
 
-  init() {
+  async init() {
     this.router.use(this.applicationInfoMiddleware);
+
     this.configuration.pages.forEach(page => {
       this.router.get(page.configuration.matcher, page.handle);
     });
+
+    if (Array.isArray(this.configuration.plugins)) {
+      this.configuration.pages.forEach(page => {
+       page.plugins = this.configuration.plugins!;
+      });
+
+      await Promise.all(this.configuration.plugins.map(async plugin => {
+        if (plugin.onBeforeStart) {
+          return plugin.onBeforeStart();
+        }
+      }));
+    }
   }
 
   toJSON() {
