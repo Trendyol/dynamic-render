@@ -101,10 +101,10 @@ class Page {
     }
   }
 
-  private async onAfterRender(page: Page, url: string, res?: express.Response, content?: RenderResult) {
+  private async onAfterRender(page: Page, url: string, res: express.Response, content?: RenderResult) {
     await Promise.all(this.plugins.map(async plugin => {
       if (plugin.onAfterRender && content) {
-        return plugin.onAfterRender(page, url, content);
+        return plugin.onAfterRender(page, url, content, res);
       }
     }))
   }

@@ -329,7 +329,7 @@ describe('[page.ts]', () => {
 
       // Assert
       expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
-      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse, response)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
@@ -385,7 +385,7 @@ describe('[page.ts]', () => {
 
       // Assert
       expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
-      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse, response)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
