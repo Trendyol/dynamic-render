@@ -1,7 +1,8 @@
 import * as sinon from "sinon";
 import * as faker from "faker";
 import {expect} from "chai";
-import {Server} from "../src/server";
+import {Server, setDynamicRenderHeader} from "../src/server";
+import {createExpressRequestMock, createExpressResponseMock} from "./helpers";
 
 const sandbox = sinon.createSandbox();
 let server: Server;
@@ -49,6 +50,15 @@ describe('[server.ts]', () => {
 
     // Assert
     expect(appStub.calledWithExactly(path, router)).to.eq(true);
+  });
+
+  it('should set dynamic rendering header', () => {
+    const request = createExpressRequestMock(sandbox);
+    const response = createExpressResponseMock(sandbox)
+    const nextStub = sandbox.stub() as any;
+    setDynamicRenderHeader(request, response, nextStub);
+        
+    expect(nextStub.calledWithExactly()).to.eq(true);
   });
 
   it('should start server and listen port', async () => {

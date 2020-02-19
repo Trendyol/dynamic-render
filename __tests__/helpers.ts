@@ -9,6 +9,7 @@ export const createExpressResponseMock = (sandbox: SinonSandbox, props?: Record<
   status: sandbox.stub().returnsThis(),
   headers: sandbox.stub().returnsThis(),
   html: sandbox.stub().returnsThis(),
+  setHeader: sandbox.stub(),
   ...props
 }) as any;
 

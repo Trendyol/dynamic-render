@@ -1,8 +1,13 @@
-import express, {Express} from "express";
+import express, {Express, Request, Response, NextFunction} from "express";
 import shrinkRayCurrent from "shrink-ray-current";
 
 interface ServerConfiguration {
   port: number;
+}
+
+const setDynamicRenderHeader = (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('x-powered-by', 'dynamic-rendering');
+  next();
 }
 
 class Server {
@@ -12,6 +17,7 @@ class Server {
     this.app = express();
 
     this.app.use(shrinkRayCurrent());
+    this.app.use(setDynamicRenderHeader);
   }
 
   listen(port: number) {
@@ -33,6 +39,7 @@ class Server {
 }
 
 export {
+  setDynamicRenderHeader,
   ServerConfiguration,
   Server
 }
