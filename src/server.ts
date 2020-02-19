@@ -1,4 +1,4 @@
-import express, { Express, Request, Response, NextFunction, response} from "express";
+import express, {Express, Request, Response, NextFunction} from "express";
 import shrinkRayCurrent from "shrink-ray-current";
 
 interface ServerConfiguration {

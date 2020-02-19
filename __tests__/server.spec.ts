@@ -2,7 +2,7 @@ import * as sinon from "sinon";
 import * as faker from "faker";
 import {expect} from "chai";
 import {Server, setDynamicRenderHeader} from "../src/server";
-import { createExpressRequestMock, createExpressResponseMock } from "./helpers";
+import {createExpressRequestMock, createExpressResponseMock} from "./helpers";
 
 const sandbox = sinon.createSandbox();
 let server: Server;
