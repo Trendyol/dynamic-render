@@ -114,9 +114,9 @@ class Page {
       res.set('cache-control', `max-age=${this.configuration.cacheDurationSeconds}, public`);
     }
 
-    if (content.headers) {
+    if (content.headers && content.headers.location) {
       res
-        .set(content.headers)
+        .set('location', content.headers.location)
         .status(content.status)
         .end();
     } else {
