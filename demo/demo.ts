@@ -119,7 +119,8 @@ const productDetailPage = dynamicRender.page({
   name: 'product-detail',
   hooks: [clearCss, lazyImageReplacer],
   interceptors: [jsInterceptor, imageInterceptor, cssInterceptor, xhrInterceptor],
-  matcher: '/*'
+  matcher: '/*',
+  passHeader: true
 });
 
 class CachePlugin implements Plugin {
