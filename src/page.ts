@@ -17,6 +17,7 @@ interface PageSettings {
   cacheDurationSeconds?: number;
   query?: object;
   followRedirects?: boolean;
+  passHeader?: boolean;
 }
 
 const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
@@ -36,7 +37,8 @@ const defaultPageSettings: Omit<Required<PageSettings>, "matcher" | "name"> = {
   },
   waitMethod: "load",
   query: {},
-  followRedirects: true
+  followRedirects: true,
+  passHeader: false,
 };
 
 
@@ -70,13 +72,17 @@ class Page {
     return url.toString();
   }
 
-  async handle(req: ApplicationRequest, res: express.Response) {
+  async handle(req: ApplicationRequest, res: express.Response) {    
     const url = this.convertRequestToUrl(req);
 
     if (await this.onBeforeRender(this, req.originalUrl, res)) return;
-
+    let emulateOptions = this.configuration.emulateOptions;
+    /* istanbul ignore next */
+    if (this.configuration.passHeader && req.headers['user-agent']) {
+      emulateOptions = { ...this.configuration.emulateOptions, userAgent: req.headers['user-agent']};
+    }
     const content = await this.engine.render({
-      emulateOptions: this.configuration.emulateOptions,
+      emulateOptions,
       url: url,
       interceptors: this.configuration.interceptors,
       hooks: this.configuration.hooks,
