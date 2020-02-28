@@ -154,7 +154,7 @@ describe('[response-cache.ts]', () => {
       expect(setStub.notCalled).to.eq(true);
     });
 
-    it('should not cache when key exists with expire time passed', async () => {
+    it('should not cache when key exists with expire time not passed yet', async () => {
       // Arrange
       const status = 200;
       const expireTime = 300;
@@ -171,7 +171,7 @@ describe('[response-cache.ts]', () => {
       });
 
       const setStub = sandbox.stub(responseCache.cache, 'set');
-      sandbox.stub(responseCache.cache, 'get').returns({expires: 0} as any);
+      sandbox.stub(responseCache.cache, 'get').returns({expires: Date.now() + 100} as any);
 
       // Act
       await responseCache.setCache(response);

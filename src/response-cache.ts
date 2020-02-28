@@ -8,54 +8,61 @@ interface ResourceCacheContent {
 }
 
 class ResponseCache {
-  cache: Map<string, ResourceCacheContent> = new Map();
+  public readonly cache: Map<string, ResourceCacheContent> = new Map();
 
-  async setCache(response: puppeteer.Response) {
+  public async setCache(response: puppeteer.Response): Promise<void> {
     const url = response.url();
-
     const headers = response.headers();
-    const status =  response.status();
-    const maxAge = this.getMaxAge(headers['cache-control']);
+    const maxAge = ResponseCache.getMaxAge(headers['cache-control']);
 
-    if (maxAge) {
-      const cacheEntry = this.cache.get(url);
-      if (cacheEntry && cacheEntry.expires < Date.now()) return;
-
-      let buffer;
+    if (maxAge && !this.hasNonExpiredCache(url)) {
       try {
-        buffer = await response.buffer();
-      } catch (error) {
-        return;
+        const buffer = await response.buffer();
+        this.cache.set(url, {
+          body: buffer,
+          status: response.status(),
+          headers: headers,
+          expires: Date.now() + (maxAge * 1000)
+        });
+      } catch (e) {
+        // TODO: we should implement a logger.
       }
-
-      this.cache.set(url, {
-        status,
-        headers,
-        body: buffer,
-
-        // todo leak
-        expires: Date.now() + (maxAge * 1000),
-      });
     }
   }
 
-  async request(request: puppeteer.Request) {
+  public async request(request: puppeteer.Request): Promise<boolean> {
     const url = request.url();
     const cacheEntry = this.cache.get(url);
-    if (cacheEntry && cacheEntry.expires > Date.now()) {
-      await request.respond(cacheEntry);
-      return true;
-    } else {
-      return false;
+    if (cacheEntry) {
+      if (!ResponseCache.isExpired(cacheEntry)) {
+        await request.respond(cacheEntry);
+        return true;
+      } else {
+        this.cache.delete(url);
+      }
     }
+    return false;
   }
 
-  private getMaxAge(headerString: string | undefined): number | null {
-    if (!headerString) return null;
+  private hasNonExpiredCache(url: string): boolean {
+    const cacheEntry = this.cache.get(url);
+    return !!cacheEntry && !ResponseCache.isExpired(cacheEntry);
+  }
+
+  private static isExpired(cacheEntry: ResourceCacheContent): boolean {
+    return cacheEntry.expires < Date.now();
+  }
+
+  private static getMaxAge(headerString: string | undefined): number | null {
+    if (!headerString) {
+      return null;
+    }
 
     const maxAgeMatch = headerString.match(/max-age=(\d+)/);
 
-    if (!maxAgeMatch) return null;
+    if (!maxAgeMatch) {
+      return null;
+    }
 
     return +maxAgeMatch[1];
   }
