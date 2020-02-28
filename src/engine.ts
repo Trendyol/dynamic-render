@@ -59,7 +59,7 @@ class Engine {
   }
 
   async render(options: RenderOptions) {
-    let browserPage;
+    let browserPage: CustomPage;
     const renderResult: RenderResult = {
       status: 404,
       html: ''
@@ -93,11 +93,21 @@ class Engine {
       }
     }
 
-
-    await browserPage.close();
-
-
+    this.closePage(browserPage);
+    
     return renderResult;
+  }
+
+  /* istanbul ignore next */
+  closePage (page: CustomPage) {
+    if (!page.isClosed) {
+      page.close().then(() => {
+        setTimeout(() => {
+          this.closePage(page);
+        }, 1000);
+      })
+      .catch(err => err);
+    }
   }
 
   async handleInterceptors(interceptors: Interceptor[], request: puppeteer.Request) {

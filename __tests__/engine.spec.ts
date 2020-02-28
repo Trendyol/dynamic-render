@@ -307,7 +307,7 @@ describe('[engine.ts]', () => {
           status: sandbox.stub().returns(pageStatus)
         }),
         content: sandbox.stub().returns(pageContent),
-        close: sandbox.stub()
+        close: sandbox.stub().resolves(pageContent)
       };
       const createPageStub = sandbox.stub(engine, 'createPage').resolves(pageStub as any);
       const hook = {
@@ -347,7 +347,7 @@ describe('[engine.ts]', () => {
           headers: sandbox.stub().returns(pageHeaders),
         }),
         content: sandbox.stub().returns(pageContent),
-        close: sandbox.stub(),
+        close: sandbox.stub().resolves(pageContent),
         redirect: {
           status: sandbox.stub().returns(pageStatus),
           headers: sandbox.stub().returns(pageHeaders),
@@ -384,7 +384,7 @@ describe('[engine.ts]', () => {
       const pageStub = {
         goto: sandbox.stub().rejects(goToStubError),
         content: sandbox.stub().returns(pageContent),
-        close: sandbox.stub(),
+        close: sandbox.stub().resolves(pageContent),
       };
       const createPageStub = sandbox.stub(engine, 'createPage').resolves(pageStub as any);
       const renderOptions = {
