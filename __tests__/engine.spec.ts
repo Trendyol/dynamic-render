@@ -360,7 +360,7 @@ describe('[engine.ts]', () => {
       const renderOptions = {
         followRedirects: true,
         emulateOptions: {},
-        url: faker.random.word(),
+        url: faker.internet.url(),
         waitMethod: faker.random.word(),
         hooks: [hook],
         interceptors: []

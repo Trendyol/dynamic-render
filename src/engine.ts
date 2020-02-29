@@ -60,6 +60,7 @@ class Engine {
 
   async render(options: RenderOptions) {
     let browserPage: CustomPage;
+
     const renderResult: RenderResult = {
       status: 404,
       html: ''
@@ -87,14 +88,17 @@ class Engine {
         const redirectRequest = browserPage.redirect;
         const headers = redirectRequest.headers();
         const status = redirectRequest.status();
-        headers.location = headers.location.replace(/\??dr=true/, '');
+        const base = new URL(options.url);
+        const redirection = new URL(headers.location, base.origin);
+        redirection.searchParams.delete("dr");
+        headers.location = redirection.href;
         renderResult.status = status;
         renderResult.headers = headers;
       }
     }
 
     this.closePage(browserPage);
-    
+
     return renderResult;
   }
 
