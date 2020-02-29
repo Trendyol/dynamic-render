@@ -62,7 +62,7 @@ class Engine {
     let browserPage: CustomPage;
 
     const renderResult: RenderResult = {
-      status: 404,
+      status: 503,
       html: ''
     };
 
