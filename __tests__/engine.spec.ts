@@ -268,7 +268,7 @@ describe('[engine.ts]', () => {
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(content).to.deep.eq({
-        status: 404,
+        status: 503,
         html: ''
       });
     });
@@ -292,7 +292,7 @@ describe('[engine.ts]', () => {
       // Assert
       expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
       expect(content).to.deep.eq({
-        status: 404,
+        status: 503,
         html: ''
       });
     });
@@ -360,7 +360,7 @@ describe('[engine.ts]', () => {
       const renderOptions = {
         followRedirects: true,
         emulateOptions: {},
-        url: faker.random.word(),
+        url: faker.internet.url(),
         waitMethod: faker.random.word(),
         hooks: [hook],
         interceptors: []
@@ -404,7 +404,7 @@ describe('[engine.ts]', () => {
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(content).to.deep.eq({
-        status: 404,
+        status: 503,
         html: '',
       });
     });
