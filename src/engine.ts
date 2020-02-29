@@ -69,6 +69,9 @@ class Engine {
     try {
       browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects);
     } catch (error) {
+      // @ts-ignore
+      console.log(error);
+      
       return renderResult;
     }
 
@@ -97,21 +100,9 @@ class Engine {
       }
     }
 
-    this.closePage(browserPage);
+    await browserPage.close();
 
     return renderResult;
-  }
-
-  /* istanbul ignore next */
-  closePage (page: CustomPage) {
-    if (!page.isClosed) {
-      page.close().then(() => {
-        setTimeout(() => {
-          this.closePage(page);
-        }, 1000);
-      })
-      .catch(err => err);
-    }
   }
 
   async handleInterceptors(interceptors: Interceptor[], request: puppeteer.Request) {
