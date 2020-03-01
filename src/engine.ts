@@ -73,9 +73,6 @@ class Engine {
     try {
       browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects);
     } catch (error) {
-      // @ts-ignore
-      console.log(error);
-      
       return renderResult;
     }
 

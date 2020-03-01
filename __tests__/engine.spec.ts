@@ -120,7 +120,14 @@ describe('[engine.ts]', () => {
 
   it('should create browser', async () => {
     // Arrange
-    const stub = sandbox.stub(puppeteer, 'launch');
+    const browser = {
+      on: () => {
+        throw new Error("Mocked method called")
+      }
+    };
+    const browserMock = sandbox.mock(browser);
+    const stub = sandbox.stub(puppeteer, 'launch').returns(browser as any);
+    browserMock.expects('on').withExactArgs('disconnected', engine.init).once();
 
     // Act
     await engine.init();
@@ -129,7 +136,8 @@ describe('[engine.ts]', () => {
     expect(stub.calledWithExactly({
       headless: true,
       ignoreHTTPSErrors: true,
-      devtools: false
+      devtools: false,
+      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
     })).to.eq(true);
   });
 
@@ -149,18 +157,20 @@ describe('[engine.ts]', () => {
       cacheMock.expects('setCache').once();
 
       const browserStub = {
-        newPage: sandbox.stub().returns(pageStub)
+        newPage: sandbox.stub().returns(pageStub),
+        on: sandbox.stub()
       };
 
       puppeteerMock.expects("launch").withExactArgs({
         headless:true,
         ignoreHTTPSErrors:true,
-        devtools:false
+        devtools:false,
+        args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
       }).resolves(browserStub);
 
       await engine.init();
       await engine.createPage({} as any , [] as any, true)
-  })
+  });
 
   it('should create new page and configure', async () => {
     // Arrange
@@ -173,7 +183,8 @@ describe('[engine.ts]', () => {
       setRequestInterception: sandbox.stub()
     };
     const browserStub = {
-      newPage: sandbox.stub().returns(pageStub)
+      newPage: sandbox.stub().returns(pageStub),
+      on: sandbox.stub()
     };
     sandbox.stub(puppeteer, 'launch').returns(browserStub as any);
     const request = createPuppeteerRequest(sandbox);
