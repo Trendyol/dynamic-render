@@ -33,6 +33,7 @@ class Engine {
     this.handleInterceptors = this.handleInterceptors.bind(this);
     this.onResponse = this.onResponse.bind(this);
     this.onRequest = this.onRequest.bind(this);
+    this.init = this.init.bind(this);
   }
 
   async init(config?: Partial<LaunchOptions>) {
@@ -40,8 +41,11 @@ class Engine {
       headless: true,
       ignoreHTTPSErrors: true,
       devtools: false,
-      ...config
+      ...config,
+      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
     });
+
+    this.browser.on("disconnected", this.init);
   }
 
   async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[], followRedirects: boolean): Promise<CustomPage> {
