@@ -273,7 +273,7 @@ describe('[page.ts]', () => {
       await page.handle(request as any, response);
 
       // Assert
-      expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
+      expect(plugin.onBeforeRender.calledWithExactly(page, request)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
@@ -328,8 +328,8 @@ describe('[page.ts]', () => {
       await page.handle(request as any, response);
 
       // Assert
-      expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
-      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse, response)).to.eq(true);
+      expect(plugin.onBeforeRender.calledWithExactly(page, request)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request, renderResponse, response)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
@@ -384,8 +384,8 @@ describe('[page.ts]', () => {
       await page.handle(request as any, response);
 
       // Assert
-      expect(plugin.onBeforeRender.calledWithExactly(page, request.originalUrl)).to.eq(true);
-      expect(plugin.onAfterRender.calledWithExactly(page, request.originalUrl, renderResponse, response)).to.eq(true);
+      expect(plugin.onBeforeRender.calledWithExactly(page, request)).to.eq(true);
+      expect(plugin.onAfterRender.calledWithExactly(page, request, renderResponse, response)).to.eq(true);
       expect(response.set.calledWithExactly('cache-control', `max-age=${configuration.cacheDurationSeconds}, public`)).to.eq(true);
       expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
       expect(response.send.calledWithExactly(renderResponse.html)).to.eq(true);
