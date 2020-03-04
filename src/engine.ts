@@ -41,8 +41,8 @@ class Engine {
       headless: true,
       ignoreHTTPSErrors: true,
       devtools: false,
+      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--disable-extensions'],
       ...config,
-      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
     });
 
     this.browser.on("disconnected", this.init);

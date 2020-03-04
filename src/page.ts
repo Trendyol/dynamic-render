@@ -70,11 +70,11 @@ class Page {
     return url.toString();
   }
 
-  async handle(req: ApplicationRequest, res: express.Response) {    
+  async handle(req: ApplicationRequest, res: express.Response) {
     const url = this.convertRequestToUrl(req);
 
-    if (await this.onBeforeRender(this, req.originalUrl, res)) return;
-    
+    if (await this.onBeforeRender(this, req, res)) return;
+
     const content = await this.engine.render({
       emulateOptions: this.configuration.emulateOptions,
       url: url,
@@ -84,15 +84,15 @@ class Page {
       followRedirects: this.configuration.followRedirects
     });
 
-    await this.onAfterRender(this, req.originalUrl, res, content);
+    await this.onAfterRender(this, req, res, content);
 
     this.handleRenderResponse(content, res);
   }
 
-  private async onBeforeRender(page: Page, url: string, res: express.Response) {
+  private async onBeforeRender(page: Page, req: express.Request, res: express.Response) {
     for (let plugin of this.plugins) {
       if (plugin.onBeforeRender) {
-        const pluginResponse = await plugin.onBeforeRender(page, url);
+        const pluginResponse = await plugin.onBeforeRender(page, req);
 
         if (pluginResponse) {
           return this.handleRenderResponse(pluginResponse, res);
@@ -101,10 +101,10 @@ class Page {
     }
   }
 
-  private async onAfterRender(page: Page, url: string, res: express.Response, content?: RenderResult) {
+  private async onAfterRender(page: Page, req: express.Request, res: express.Response, content?: RenderResult) {
     await Promise.all(this.plugins.map(async plugin => {
       if (plugin.onAfterRender && content) {
-        return plugin.onAfterRender(page, url, content, res);
+        return plugin.onAfterRender(page, req, content, res);
       }
     }))
   }

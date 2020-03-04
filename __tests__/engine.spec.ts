@@ -137,7 +137,7 @@ describe('[engine.ts]', () => {
       headless: true,
       ignoreHTTPSErrors: true,
       devtools: false,
-      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
+      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--disable-extensions']
     })).to.eq(true);
   });
 
@@ -165,7 +165,7 @@ describe('[engine.ts]', () => {
         headless:true,
         ignoreHTTPSErrors:true,
         devtools:false,
-        args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
+        args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--disable-extensions']
       }).resolves(browserStub);
 
       await engine.init();
