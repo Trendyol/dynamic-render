@@ -1,7 +1,7 @@
 import * as sinon from "sinon";
 import {SinonMock} from "sinon";
 import {expect} from "chai";
-import {DynamicRender} from "../src/dynamic-render";
+import {DynamicRender, PrerenderDefaultConfiguration, WorkerRenderOptions} from "../src/dynamic-render";
 import {Server} from "../src/server";
 import {Engine} from "../src/engine";
 import {Hook, HookConfiguration} from "../src/hook";
@@ -160,5 +160,110 @@ describe('[prerender.ts]', () => {
     // Assert
     expect(initStub.calledOnce).to.eq(true);
     expect(initStub.calledWithExactly()).to.eq(true);
+  });
+
+  it('should init as worker', async () => {
+    // Arrange
+    const applicationProps: PrerenderDefaultConfiguration = {
+      puppeteer: {
+        [faker.random.word()]: faker.random.word()
+      }
+    } as any;
+    const initStub = sandbox.stub(renderer, 'init');
+
+    const dynamicRender = new DynamicRender(server, renderer);
+
+    // Act
+    await dynamicRender.startAsWorker(applicationProps as any);
+
+    // Assert
+    expect(initStub.firstCall.args[0]).to.include(applicationProps.puppeteer);
+  });
+
+  it('should render as worker succesfully', async () => {
+    // Arrange
+    const applicationName = faker.random.word();
+    const pageName = faker.random.word();
+    const origin = faker.random.word();
+    const path = faker.random.word();
+    const dynamicRender = new DynamicRender(server, renderer);
+    const renderOptions = {
+      page: pageName,
+      application: applicationName,
+      path: path
+    } as WorkerRenderOptions;
+
+    const response = faker.random.word();
+    const handleAsWorkerStub = sandbox.stub().resolves(response);
+
+    dynamicRender.applications.set(applicationName, {
+      configuration: {
+        origin,
+        pages: [{
+          handleAsWorker: handleAsWorkerStub,
+          configuration: {
+            name: pageName
+          }
+        }]
+      }
+    } as any);
+
+
+    // Act
+    const renderResponse = await dynamicRender.renderAsWorker(renderOptions);
+
+    // Assert
+    expect(handleAsWorkerStub.calledWithExactly(origin, path)).to.eq(true);
+    expect(renderResponse).to.eq(response);
+  });
+
+
+  it('should render as worker when page not found', async () => {
+    // Arrange
+    const applicationName = faker.random.word();
+    const pageName = faker.random.word();
+    const origin = faker.random.word();
+    const path = faker.random.word();
+    const dynamicRender = new DynamicRender(server, renderer);
+    const renderOptions = {
+      page: pageName,
+      application: applicationName,
+      path: path
+    } as WorkerRenderOptions;
+
+
+    dynamicRender.applications.set(applicationName, {
+      configuration: {
+        origin,
+        pages: []
+      }
+    } as any);
+
+
+    // Act
+    const renderResponse = await dynamicRender.renderAsWorker(renderOptions);
+
+    // Assert
+    expect(renderResponse).to.eq(undefined);
+  });
+
+  it('should render as worker when application not found', async () => {
+    // Arrange
+    const applicationName = faker.random.word();
+    const pageName = faker.random.word();
+    const path = faker.random.word();
+    const dynamicRender = new DynamicRender(server, renderer);
+    const renderOptions = {
+      page: pageName,
+      application: applicationName,
+      path: path
+    } as WorkerRenderOptions;
+
+
+    // Act
+    const renderResponse = await dynamicRender.renderAsWorker(renderOptions);
+
+    // Assert
+    expect(renderResponse).to.eq(undefined);
   });
 });

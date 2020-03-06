@@ -61,8 +61,8 @@ class Page {
     this.engine = engine;
   }
 
-  private convertRequestToUrl(req: ApplicationRequest) {
-    const url = new URL(`${req.application!.origin}${req.url}`);
+  private convertRequestToUrl(origin: string, path: string) {
+    const url = new URL(`${origin}${path}`);
 
     for (const [key, value] of Object.entries(this.configuration.query))
       url.searchParams.append(key, value);
@@ -70,8 +70,21 @@ class Page {
     return url.toString();
   }
 
+  async handleAsWorker(origin: string, path: string) {
+    const url = this.convertRequestToUrl(origin, path);
+
+    return this.engine.render({
+      emulateOptions: this.configuration.emulateOptions,
+      url: url,
+      interceptors: this.configuration.interceptors,
+      hooks: this.configuration.hooks,
+      waitMethod: this.configuration.waitMethod,
+      followRedirects: this.configuration.followRedirects
+    });
+  }
+
   async handle(req: ApplicationRequest, res: express.Response) {
-    const url = this.convertRequestToUrl(req);
+    const url = this.convertRequestToUrl(req.application!.origin, req.url);
 
     if (await this.onBeforeRender(this, req, res)) return;
 
