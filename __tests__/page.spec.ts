@@ -231,6 +231,23 @@ describe('[page.ts]', () => {
     expect(response.status.calledWithExactly(renderResponse.status)).to.eq(true);
   });
 
+  it('should handle as worker', async () => {
+    // Arrange
+    const origin = faker.internet.url();
+    const path = '/path';
+    engineMock.expects('render').withExactArgs({
+      emulateOptions: page.configuration.emulateOptions,
+      url: origin + path,
+      interceptors: page.configuration.interceptors,
+      hooks: page.configuration.hooks,
+      waitMethod: page.configuration.waitMethod,
+      followRedirects: page.configuration.followRedirects
+    }).resolves();
+
+    // Act
+    await page.handleAsWorker(origin, path);
+  });
+
   describe('Page plugins', () => {
     it('should return response from cache', async () => {
       // Arrange
@@ -416,9 +433,7 @@ describe('[page.ts]', () => {
         followRedirects: false,
       };
 
-      const plugin = {
-
-      };
+      const plugin = {};
 
       const page = new Page(configuration as any, engine, [plugin]);
 

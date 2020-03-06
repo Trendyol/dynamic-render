@@ -12,6 +12,12 @@ interface PrerenderDefaultConfiguration extends ServerConfiguration {
   puppeteer: Partial<LaunchOptions>
 }
 
+interface WorkerRenderOptions {
+  page: string;
+  application: string;
+  path: string;
+}
+
 const defaultConfiguration = {
   port: 8080,
   puppeteer: {
@@ -37,6 +43,7 @@ class DynamicRender {
     this.engine = renderer;
 
     this.server.register('/', 'get', this.status.bind(this));
+    this.renderAsWorker = this.renderAsWorker.bind(this);
   }
 
   async start(configuration?: PrerenderDefaultConfiguration) {
@@ -47,6 +54,24 @@ class DynamicRender {
     await this.engine.init(this.configuration.puppeteer);
     await this.registerApplications();
     return this.server.listen(this.configuration.port);
+  }
+
+  async startAsWorker(configuration?: PrerenderDefaultConfiguration) {
+    this.configuration = {
+      ...defaultConfiguration,
+      ...configuration,
+    };
+    await this.engine.init(this.configuration.puppeteer);
+  }
+
+  renderAsWorker(workerParams: WorkerRenderOptions) {
+    const application = this.applications.get(workerParams.application);
+    if (!application) return;
+
+    const page = application.configuration.pages.find(page => page.configuration.name === workerParams.page);
+    if (!page) return;
+
+    return page.handleAsWorker(application.configuration.origin, workerParams.path)
   }
 
   hook(configuration: HookConfiguration): Hook {
@@ -85,6 +110,8 @@ class DynamicRender {
 
 
 export {
+  WorkerRenderOptions,
+  PrerenderDefaultConfiguration,
   DynamicRender
 }
 
