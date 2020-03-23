@@ -10,13 +10,11 @@ import {Interceptor, InterceptorConfiguration} from "../src/interceptor";
 import {Page, PageSettings} from "../src/page";
 import {Application, ApplicationConfig} from "../src/application";
 import {createExpressRequestMock, createExpressResponseMock} from "./helpers";
-import {ResponseCache} from "../src/response-cache";
 
 const sandbox = sinon.createSandbox();
 
-const responseCache = new ResponseCache();
 const server = new Server();
-const renderer = new Engine(responseCache);
+const renderer = new Engine();
 
 let dynamicRender: DynamicRender;
 
