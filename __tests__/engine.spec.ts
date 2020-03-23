@@ -9,21 +9,10 @@ import {createPuppeteerRequest, createPuppeteerResponse} from "./helpers";
 const sandbox = sinon.createSandbox();
 let engine: Engine;
 
-const cache = {
-  setCache: () => {
-    throw new Error('Mocked method call: cache.setCache');
-  },
-  request: () => {
-    throw new Error('Mocked method call: cache.request');
-  }
-} as any;
-
-let cacheMock: SinonMock;
 
 describe('[engine.ts]', () => {
   beforeEach(() => {
-    cacheMock = sandbox.mock(cache);
-    engine = new Engine(cache)
+    engine = new Engine()
   });
 
   afterEach(() => {
@@ -32,7 +21,7 @@ describe('[engine.ts]', () => {
 
   it('should create new Engine', () => {
     // Arrange
-    const engine = new Engine(cache);
+    const engine = new Engine();
 
     // Assert
     expect(engine).to.be.instanceOf(Engine);
@@ -41,7 +30,6 @@ describe('[engine.ts]', () => {
   it('should use response cache on response', () => {
     // Arrange
     const response = createPuppeteerResponse(sandbox);
-    cacheMock.expects('setCache');
 
     // Act
     engine.onResponse(response);
@@ -55,7 +43,6 @@ describe('[engine.ts]', () => {
     const request = createPuppeteerRequest(sandbox, {
       continue: continueStub
     });
-    cacheMock.expects('request').returns(true);
     const interceptorSpy = sandbox.spy(engine, 'handleInterceptors');
 
     // Act
@@ -71,7 +58,6 @@ describe('[engine.ts]', () => {
     const request = createPuppeteerRequest(sandbox);
     const browserPage = sandbox.stub() as any;
     const followRedirects = false;
-    cacheMock.expects('request').returns(false);
     const interceptorSpy = sandbox.stub(engine, 'handleInterceptors');
 
     // Act
@@ -109,7 +95,6 @@ describe('[engine.ts]', () => {
     const browserPage = sandbox.stub() as any;
     const followRedirects = true;
     const request = createPuppeteerRequest(sandbox);
-    cacheMock.expects('request').resolves(false);
 
     // Act
     await engine.onRequest(request, [], browserPage, followRedirects);
@@ -152,9 +137,6 @@ describe('[engine.ts]', () => {
         on: sandbox.stub().withArgs("request", sinon.match.func).callsArgWith(1, request),
         setRequestInterception: sandbox.stub()
       };
-
-      cacheMock.expects('request').once();
-      cacheMock.expects('setCache').once();
 
       const browserStub = {
         newPage: sandbox.stub().returns(pageStub),

@@ -24,12 +24,8 @@ interface RenderOptions {
 
 class Engine {
   private browser!: Browser;
-  private responseCache: ResponseCache;
 
-  constructor(
-    responseCache: ResponseCache,
-  ) {
-    this.responseCache = responseCache;
+  constructor() {
     this.handleInterceptors = this.handleInterceptors.bind(this);
     this.onResponse = this.onResponse.bind(this);
     this.onRequest = this.onRequest.bind(this);
@@ -126,7 +122,7 @@ class Engine {
   }
 
   async onResponse(response: puppeteer.Response) {
-    await this.responseCache.setCache(response);
+
   }
 
   async onRequest(request: puppeteer.Request, interceptors: Interceptor[], browserPage: CustomPage, followRedirects: boolean) {
@@ -134,8 +130,6 @@ class Engine {
       (browserPage.redirect as any) = request.redirectChain()[0].response();
       return request.abort()
     }
-
-    if (await this.responseCache.request(request)) return;
 
     if (typeof interceptors !== "undefined" && interceptors.length > 0) {
       this.handleInterceptors(interceptors, request);
