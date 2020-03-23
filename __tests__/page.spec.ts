@@ -5,11 +5,9 @@ import {expect} from "chai";
 import {Page, PageSettings} from "../src/page";
 import {Engine} from "../src/engine";
 import {createExpressResponseMock} from "./helpers";
-import {ResponseCache} from "../src/response-cache";
 
 const sandbox = sinon.createSandbox();
-const responseCache = new ResponseCache();
-const engine = new Engine(responseCache);
+const engine = new Engine();
 
 let engineMock: SinonMock;
 let page: Page;
