@@ -147,7 +147,7 @@ class CachePlugin implements Plugin {
 dynamicRender.application('mobile-web', {
   pages: [productDetailPage],
   origin: 'https://m.trendyol.com',
-  plugins: [new CachePlugin()]
+  plugins: []
 });
 
 const config = {

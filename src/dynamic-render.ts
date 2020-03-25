@@ -1,5 +1,5 @@
 import {Server, ServerConfiguration} from "./server";
-import {Engine} from "./engine";
+import {Engine, InitialRenderProps} from "./engine";
 import {Page, PageSettings} from "./page";
 import {Application, ApplicationConfig} from "./application";
 import {Hook, HookConfiguration} from "./hook";
@@ -16,6 +16,7 @@ interface WorkerRenderOptions {
   page: string;
   application: string;
   path: string;
+  initial?: InitialRenderProps;
 }
 
 const defaultConfiguration = {
@@ -71,7 +72,7 @@ class DynamicRender {
     const page = application.configuration.pages.find(page => page.configuration.name === workerParams.page);
     if (!page) return;
 
-    return page.handleAsWorker(application.configuration.origin, workerParams.path)
+    return page.handleAsWorker(application.configuration.origin, workerParams.path, workerParams.initial)
   }
 
   hook(configuration: HookConfiguration): Hook {

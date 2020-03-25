@@ -1,9 +1,8 @@
-import sinon, {SinonMock} from "sinon";
+import sinon from "sinon";
 import * as faker from "faker";
 import {expect} from "chai";
 import puppeteer from "puppeteer";
 import {Engine} from "../src/engine";
-import {ResponseCache} from "../src/response-cache";
 import {createPuppeteerRequest, createPuppeteerResponse} from "./helpers";
 
 const sandbox = sinon.createSandbox();
@@ -67,26 +66,26 @@ describe('[engine.ts]', () => {
     expect(interceptorSpy.calledWithExactly(interceptors, request)).to.eq(true);
   });
 
-   it('should not call interceptors for requests ( followRedirect )', async () => {
-      // Arrange
-      const interceptors = [] as any;
-      const browserPage = sandbox.stub() as any;
-      const followRedirects = true;
-      const request = createPuppeteerRequest(sandbox);
-      request.isNavigationRequest = () => true
-      request.resourceType = () => 'document'
-      request.redirectChain = () => [
-        {response: () => createPuppeteerResponse(sandbox)},
-        {response: () => createPuppeteerResponse(sandbox)},
-      ];
+  it('should not call interceptors for requests ( followRedirect )', async () => {
+    // Arrange
+    const interceptors = [] as any;
+    const browserPage = sandbox.stub() as any;
+    const followRedirects = true;
+    const request = createPuppeteerRequest(sandbox);
+    request.isNavigationRequest = () => true
+    request.resourceType = () => 'document'
+    request.redirectChain = () => [
+      {response: () => createPuppeteerResponse(sandbox)},
+      {response: () => createPuppeteerResponse(sandbox)},
+    ];
 
-      // Act
-      await engine.onRequest(request, interceptors, browserPage, followRedirects);
+    // Act
+    await engine.onRequest(request, interceptors, browserPage, followRedirects);
 
-      // Asset
-      expect(Object.keys(browserPage.redirect).length > 0).to.eq(true);
-      expect(request.continue.calledOnce).to.eq(false);
-      expect(request.abort.calledOnce).to.eq(true);
+    // Asset
+    expect(Object.keys(browserPage.redirect).length > 0).to.eq(true);
+    expect(request.continue.calledOnce).to.eq(false);
+    expect(request.abort.calledOnce).to.eq(true);
   });
 
   it('should call continue if there is no interceptor', async () => {
@@ -127,32 +126,33 @@ describe('[engine.ts]', () => {
   });
 
   it("should call request with correct params", async () => {
-      const puppeteerMock=sandbox.mock(puppeteer);
-      const request = createPuppeteerRequest(sandbox);
-      const pageStub = {
-        emulate: sandbox.stub(),
-        _client: {
-          send: sandbox.stub()
-        },
-        on: sandbox.stub().withArgs("request", sinon.match.func).callsArgWith(1, request),
-        setRequestInterception: sandbox.stub()
-      };
+    const puppeteerMock = sandbox.mock(puppeteer);
+    const request = createPuppeteerRequest(sandbox);
+    const pageStub = {
+      emulate: sandbox.stub(),
+      _client: {
+        send: sandbox.stub()
+      },
+      on: sandbox.stub().withArgs("request", sinon.match.func).callsArgWith(1, request),
+      setRequestInterception: sandbox.stub()
+    };
 
-      const browserStub = {
-        newPage: sandbox.stub().returns(pageStub),
-        on: sandbox.stub()
-      };
+    const browserStub = {
+      newPage: sandbox.stub().returns(pageStub),
+      on: sandbox.stub()
+    };
 
-      puppeteerMock.expects("launch").withExactArgs({
-        headless:true,
-        ignoreHTTPSErrors:true,
-        devtools:false,
-        args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--disable-extensions']
-      }).resolves(browserStub);
+    puppeteerMock.expects("launch").withExactArgs({
+      headless: true,
+      ignoreHTTPSErrors: true,
+      devtools: false,
+      args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--disable-extensions']
+    }).resolves(browserStub);
 
-      await engine.init();
-      await engine.createPage({} as any , [] as any, true)
+    await engine.init();
+    await engine.createPage({} as any, [] as any, true)
   });
+
 
   it('should create new page and configure', async () => {
     // Arrange
@@ -199,6 +199,51 @@ describe('[engine.ts]', () => {
     pageStub.on.withArgs("request").callsArgWith(2, request);
   });
 
+  it('should create new page and configure with initial page', async () => {
+    // Arrange
+    const pageStub = {
+      emulate: sandbox.stub(),
+      _client: {
+        send: sandbox.stub()
+      },
+      on: sandbox.stub(),
+      setRequestInterception: sandbox.stub()
+    };
+    const browserStub = {
+      newPage: sandbox.stub().returns(pageStub),
+      on: sandbox.stub()
+    };
+    sandbox.stub(puppeteer, 'launch').returns(browserStub as any);
+    const request = createPuppeteerRequest(sandbox,{
+      method: sandbox.stub().returns('GET'),
+      resourceType: sandbox.stub().returns('document')
+    });
+    const emulateOptions = {};
+    const interceptors = [] as any;
+    const followRedirects = true;
+    engine.onRequest = sandbox.stub();
+    const initial = {
+      html: faker.random.word(),
+      statusCode: faker.random.number(),
+      headers: {}
+    };
+
+
+    pageStub.on.withArgs("request").callsArgWith(1, request);
+
+    // Act
+    await engine.init();
+    await engine.createPage(emulateOptions, interceptors, followRedirects, initial);
+
+    // Assert
+    expect((engine.onRequest as any).called).to.eq(false);
+    expect(request.respond.calledWithExactly({
+      body: initial.html,
+      status: +initial.statusCode,
+      headers: initial.headers
+    })).to.eq(true);
+  });
+
   describe('Rendering', () => {
     it('should handle render process (no hooks)', async () => {
       // Arrange
@@ -218,14 +263,19 @@ describe('[engine.ts]', () => {
         url: faker.random.word(),
         waitMethod: faker.random.word(),
         hooks: [],
-        interceptors: []
+        interceptors: [],
+        initial: {
+          html: faker.random.word(),
+          statusCode: faker.random.number(),
+          headers: {}
+        }
       };
 
       // Act
       const content = await engine.render(renderOptions as any);
 
       // Assert
-      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
+      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects, renderOptions.initial)).to.eq(true);
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(content).to.deep.eq({
@@ -250,14 +300,19 @@ describe('[engine.ts]', () => {
         url: faker.random.word(),
         waitMethod: faker.random.word(),
         hooks: [],
-        interceptors: []
+        interceptors: [],
+        initial: {
+          html: faker.random.word(),
+          statusCode: faker.random.number(),
+          headers: {}
+        }
       };
 
       // Act
       const content = await engine.render(renderOptions as any);
 
       // Assert
-      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
+      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects, renderOptions.initial)).to.eq(true);
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(content).to.deep.eq({
@@ -274,7 +329,12 @@ describe('[engine.ts]', () => {
         url: faker.random.word(),
         waitMethod: faker.random.word(),
         hooks: [],
-        interceptors: []
+        interceptors: [],
+        initial: {
+          html: faker.random.word(),
+          statusCode: faker.random.number(),
+          headers: {}
+        }
       };
       const createPageError = new Error(faker.random.word())
       const createPageStub = sandbox.stub(engine, 'createPage').rejects(createPageError);
@@ -283,7 +343,7 @@ describe('[engine.ts]', () => {
       const content = await engine.render(renderOptions as any);
 
       // Assert
-      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
+      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects, renderOptions.initial)).to.eq(true);
       expect(content).to.deep.eq({
         status: 503,
         html: ''
@@ -312,14 +372,19 @@ describe('[engine.ts]', () => {
         url: faker.random.word(),
         waitMethod: faker.random.word(),
         hooks: [hook],
-        interceptors: []
+        interceptors: [],
+        initial: {
+          html: faker.random.word(),
+          statusCode: faker.random.number(),
+          headers: {}
+        }
       };
 
       // Act
       const content = await engine.render(renderOptions as any);
 
       // Assert
-      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
+      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects, renderOptions.initial)).to.eq(true);
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(content).to.deep.eq({
@@ -331,7 +396,7 @@ describe('[engine.ts]', () => {
 
     it('should handle render process (with followRedirect)', async () => {
       // Arrange
-      const pageHeaders = { location: faker.internet.url() };
+      const pageHeaders = {location: faker.internet.url()};
       const pageContent = '';
       const pageStatus = 301;
       const pageStub = {
@@ -356,14 +421,19 @@ describe('[engine.ts]', () => {
         url: faker.internet.url(),
         waitMethod: faker.random.word(),
         hooks: [hook],
-        interceptors: []
+        interceptors: [],
+        initial: {
+          html: faker.random.word(),
+          statusCode: faker.random.number(),
+          headers: {}
+        }
       };
 
       // Act
       const content = await engine.render(renderOptions as any);
 
       // Assert
-      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
+      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects, renderOptions.initial)).to.eq(true);
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(content.status).to.eq(pageStatus);
       expect(content.html).to.eq("");
@@ -373,7 +443,7 @@ describe('[engine.ts]', () => {
     it('should handle render process (navigation fails)', async () => {
       // Arrange
       const pageContent = faker.random.word();
-      const goToStubError=new Error(faker.random.word());
+      const goToStubError = new Error(faker.random.word());
       const pageStub = {
         goto: sandbox.stub().rejects(goToStubError),
         content: sandbox.stub().returns(pageContent),
@@ -386,14 +456,19 @@ describe('[engine.ts]', () => {
         url: faker.random.word(),
         waitMethod: faker.random.word(),
         hooks: [],
-        interceptors: []
+        interceptors: [],
+        initial: {
+          html: faker.random.word(),
+          statusCode: faker.random.number(),
+          headers: {}
+        }
       };
 
       // Act
       const content = await engine.render(renderOptions as any);
 
       // Assert
-      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects)).to.eq(true);
+      expect(createPageStub.calledWithExactly(renderOptions.emulateOptions, renderOptions.interceptors, renderOptions.followRedirects, renderOptions.initial)).to.eq(true);
       expect(pageStub.goto.calledWithExactly(renderOptions.url, {waitUntil: renderOptions.waitMethod})).to.eq(true);
       expect(pageStub.close.calledOnce).to.eq(true);
       expect(content).to.deep.eq({

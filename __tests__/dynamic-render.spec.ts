@@ -211,7 +211,7 @@ describe('[prerender.ts]', () => {
     const renderResponse = await dynamicRender.renderAsWorker(renderOptions);
 
     // Assert
-    expect(handleAsWorkerStub.calledWithExactly(origin, path)).to.eq(true);
+    expect(handleAsWorkerStub.calledWithExactly(origin, path, undefined)).to.eq(true);
     expect(renderResponse).to.eq(response);
   });
 

@@ -1,7 +1,6 @@
 import puppeteer, {Browser, EmulateOptions, LaunchOptions, LoadEvent} from "puppeteer";
 import {Interceptor} from "./interceptor";
 import {Hook} from "./hook";
-import {ResponseCache} from "./response-cache";
 
 interface RenderResult {
   status: number,
@@ -13,6 +12,12 @@ interface CustomPage extends puppeteer.Page {
   redirect?: puppeteer.Response
 }
 
+interface InitialRenderProps {
+  html: string,
+  statusCode: number | string,
+  headers: Record<string, string>
+}
+
 interface RenderOptions {
   emulateOptions: EmulateOptions,
   url: string,
@@ -20,6 +25,7 @@ interface RenderOptions {
   hooks: Hook[],
   waitMethod: LoadEvent,
   followRedirects: boolean,
+  initial?: InitialRenderProps
 }
 
 class Engine {
@@ -44,7 +50,7 @@ class Engine {
     this.browser.on("disconnected", this.init);
   }
 
-  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[], followRedirects: boolean): Promise<CustomPage> {
+  async createPage(emulateOptions: EmulateOptions, interceptors: Interceptor[], followRedirects: boolean, initial?: InitialRenderProps): Promise<CustomPage> {
     const browserPage = await this.browser.newPage();
     await browserPage.emulate(emulateOptions);
     await (browserPage as any)._client.send('Network.setBypassServiceWorker', {bypass: true});
@@ -53,7 +59,17 @@ class Engine {
     });
     await browserPage.setRequestInterception(true);
 
-    browserPage.on('request', (request) => this.onRequest(request, interceptors, browserPage, followRedirects));
+    browserPage.on('request', (request) => {
+      if (initial && (request.resourceType()) === 'document' && request.method() === "GET") {
+        return request.respond({
+          body: initial.html,
+          status: +initial.statusCode,
+          headers: initial.headers
+        });
+      }
+
+      this.onRequest(request, interceptors, browserPage, followRedirects)
+    });
     browserPage.on('response', this.onResponse);
     return browserPage;
   }
@@ -67,7 +83,7 @@ class Engine {
     };
 
     try {
-      browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects);
+      browserPage = await this.createPage(options.emulateOptions, options.interceptors, options.followRedirects, options.initial);
     } catch (error) {
       return renderResult;
     }
@@ -140,6 +156,7 @@ class Engine {
 }
 
 export {
+  InitialRenderProps,
   RenderResult,
   Engine
 }

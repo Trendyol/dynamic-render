@@ -21,6 +21,8 @@ export const createExpressRequestMock = (sandbox: SinonSandbox) => ({
 export const createPuppeteerRequest = (sandbox: SinonSandbox, props?: Record<string, SinonStub>) => ({
   url: sandbox.stub(),
   respond: sandbox.stub(),
+  resourceType: sandbox.stub(),
+  method: sandbox.stub(),
   continue: sandbox.stub(),
   abort: sandbox.stub(),
   request: sandbox.stub(),

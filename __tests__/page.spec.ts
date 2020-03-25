@@ -239,7 +239,8 @@ describe('[page.ts]', () => {
       interceptors: page.configuration.interceptors,
       hooks: page.configuration.hooks,
       waitMethod: page.configuration.waitMethod,
-      followRedirects: page.configuration.followRedirects
+      followRedirects: page.configuration.followRedirects,
+      initial: undefined
     }).resolves();
 
     // Act

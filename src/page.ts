@@ -3,7 +3,7 @@ import {Hook} from "./hook";
 import express from "express";
 import {Interceptor} from "./interceptor";
 import {ApplicationRequest} from "./application";
-import {Engine, RenderResult} from "./engine";
+import {Engine, InitialRenderProps, RenderResult} from "./engine";
 import {Omit} from "yargs";
 import {Plugin} from "./types";
 
@@ -70,7 +70,7 @@ class Page {
     return url.toString();
   }
 
-  async handleAsWorker(origin: string, path: string) {
+  async handleAsWorker(origin: string, path: string, initial?: InitialRenderProps) {
     const url = this.convertRequestToUrl(origin, path);
 
     return this.engine.render({
@@ -79,7 +79,8 @@ class Page {
       interceptors: this.configuration.interceptors,
       hooks: this.configuration.hooks,
       waitMethod: this.configuration.waitMethod,
-      followRedirects: this.configuration.followRedirects
+      followRedirects: this.configuration.followRedirects,
+      initial
     });
   }
 
