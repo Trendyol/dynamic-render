@@ -4,14 +4,18 @@ import {expect} from "chai";
 import puppeteer from "puppeteer";
 import {Engine} from "../src/engine";
 import {createPuppeteerRequest, createPuppeteerResponse} from "./helpers";
+import {ResponseCache} from "../src/response-cache";
 
 const sandbox = sinon.createSandbox();
 let engine: Engine;
 
+const cache = new ResponseCache();
+let cacheMock;
 
 describe('[engine.ts]', () => {
   beforeEach(() => {
-    engine = new Engine()
+    cacheMock = sandbox.mock(cache);
+    engine = new Engine(cache)
   });
 
   afterEach(() => {
@@ -20,7 +24,7 @@ describe('[engine.ts]', () => {
 
   it('should create new Engine', () => {
     // Arrange
-    const engine = new Engine();
+    const engine = new Engine(cache);
 
     // Assert
     expect(engine).to.be.instanceOf(Engine);

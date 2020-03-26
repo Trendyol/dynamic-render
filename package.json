@@ -1,6 +1,6 @@
 {
   "name": "dynamic-render",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Dynamic Render is a headless Chrome rendering solution designed to render & serialise web pages on the fly.",
   "main": "dist/index.js",
   "scripts": {

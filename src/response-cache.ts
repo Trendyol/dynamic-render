@@ -4,23 +4,26 @@ interface ResourceCacheContent {
   status: number;
   headers: Record<string, string>;
   body: Buffer;
-  expires: number;
+  t: NodeJS.Timeout;
 }
 
 class ResponseCache {
   cache: Map<string, ResourceCacheContent> = new Map();
+  static validExtensions = ['js', 'css'];
 
   async setCache(response: puppeteer.Response) {
     const url = response.url();
 
+    if (!url || !ResponseCache.validExtensions.some(extension => url.endsWith(extension))) {
+      return;
+    }
+
     const headers = response.headers();
-    const status =  response.status();
+    const status = response.status();
     const maxAge = this.getMaxAge(headers['cache-control']);
+    const inCache = this.cache.get(url);
 
-    if (maxAge) {
-      const cacheEntry = this.cache.get(url);
-      if (cacheEntry && cacheEntry.expires < Date.now()) return;
-
+    if (maxAge && !inCache) {
       let buffer;
       try {
         buffer = await response.buffer();
@@ -32,17 +35,22 @@ class ResponseCache {
         status,
         headers,
         body: buffer,
-
-        // todo leak
-        expires: Date.now() + (maxAge * 1000),
+        t: setTimeout(() => {
+          this.cache.delete(url);
+        }, Math.min(maxAge * 1000, 2147483647))
       });
     }
   }
 
   async request(request: puppeteer.Request) {
     const url = request.url();
+    if (!url || !ResponseCache.validExtensions.some(extension => url.endsWith(extension))) {
+      return false;
+    }
+
     const cacheEntry = this.cache.get(url);
-    if (cacheEntry && cacheEntry.expires > Date.now()) {
+
+    if (cacheEntry) {
       await request.respond(cacheEntry);
       return true;
     } else {
@@ -53,7 +61,7 @@ class ResponseCache {
   private getMaxAge(headerString: string | undefined): number | null {
     if (!headerString) return null;
 
-    const maxAgeMatch = headerString.match(/max-age=(\d+)/);
+    const maxAgeMatch = headerString.match(/max-age=(\d+)/i);
 
     if (!maxAgeMatch) return null;
 
