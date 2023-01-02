@@ -314,3 +314,4 @@ dynamicRender.application('mobile-web', {
   plugins: [new CachePlugin()]
 });
 ```
+test
